@@ -383,19 +383,22 @@ COSINNUS_MICROSITE_RENDER_EMPTY_APPS = False
 
 # Default title for all pages unless the title block is overwritten. 
 # This is put through a {% trans %} tag. """
-COSINNUS_BASE_PAGE_TITLE_TRANS = 'Netzwerk Wachstumswende'
+COSINNUS_BASE_PAGE_TITLE_TRANS = ''
 
 # Etherpad config.
 # Warning: Etherpad URL and KEY are usually overwritten in settings.py on the server! """
-COSINNUS_ETHERPAD_BASE_URL = 'https://pad.sinnwerkstatt.com/api'
-COSINNUS_ETHERPAD_API_KEY = '11456b253e74523f62059a5e341dd877fa4c01dbade5ba5309e1df7dfbc45e14'
+COSINNUS_ETHERPAD_BASE_URL = None
+COSINNUS_ETHERPAD_API_KEY = None
 
 # Ethercalc config
 COSINNUS_ETHERPAD_ENABLE_ETHERCALC = True
-COSINNUS_ETHERPAD_ETHERCALC_BASE_URL = 'https://calc.wechange.de'
+COSINNUS_ETHERPAD_ETHERCALC_BASE_URL = None
+
+# Chat config
+COSINNUS_CHAT_BASE_URL = None
 
 # default from-email:
-COSINNUS_DEFAULT_FROM_EMAIL = 'noreply@wachstumswende.de'
+COSINNUS_DEFAULT_FROM_EMAIL = None
 DEFAULT_FROM_EMAIL = COSINNUS_DEFAULT_FROM_EMAIL
 
 # settings for email-dkim signing. you can follow this guide for creating a key https://blog.codinghorror.com/so-youd-like-to-send-some-email-through-code/ (point 2)
