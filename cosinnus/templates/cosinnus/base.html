@@ -32,7 +32,9 @@
 	        {% import_django_select2_css %}
 
 	        <link href="{% static 'css/bootstrap3-cosinnus.css' %}" rel="stylesheet">
-	        <link href="{% static 'css/vendor/font-awesome.min.css' %}" rel="stylesheet">
+	        
+	        <link href="{% static 'css/vendor/font-awesome-5/css/all.css' %}" rel="stylesheet"><!-- fa5 -->
+	        <link href="{% static 'css/vendor/font-awesome.min.css' %}" rel="stylesheet"><!-- fa4 -->
 	        <link href="{% static 'css/vendor/select2.css' %}" rel="stylesheet">
 	        <link href="{% static 'css/vendor/fullcalendar.css' %}" rel="stylesheet">
 	        <link href="{% static 'css/vendor/lightbox.css' %}" rel="stylesheet">
@@ -40,7 +42,7 @@
 			<link rel="stylesheet/less" href="{% static "less/cosinnus.less" %}">
 			<script src="{% static "js/vendor/less.min.js" %}"></script>
 			{% else %}
-		    <link href="{% static 'css/cosinnus.css' %}?v=0.49" rel="stylesheet">
+		    <link href="{% static 'css/cosinnus.css' %}?v=0.55" rel="stylesheet">
 			{% endif %}
 	        <link href="{% static 'css/cosinnus_portal_style.css' %}?v=0.6" rel="stylesheet">
 	        <link href="{% static COSINNUS_CURRENT_PORTAL.custom_stylesheet_url %}?v=0.2" rel="stylesheet">
@@ -96,11 +98,16 @@
                 var cosinnus_current_language = "{{ COSINNUS_CURRENT_LANGUAGE }}";
                 var cosinnus_report_object_url = "{% url 'cosinnus:report-object' %}";
             </script>
-            <script src="{% static 'js/cosinnus.js' %}?v=0.41"></script>
+            <script src="{% static 'js/cosinnus.js' %}?v=0.45"></script>
             <script src="{% localized_js 'cosinnus_formats.js' %}"></script>
             <script src="{% static 'js/cosinnus.feedback.js' %}?v=0.1"></script>
         {% endblock cosinnus_jshead %}
-
+        
+        {% block js_app_dependencies %}
+			{% if SETTINGS.COSINNUS_USE_V2_NAVBAR or SETTINGS.COSINNUS_USE_V2_NAVBAR_ADMIN_ONLY and user.is_superuser %}
+				{% include 'cosinnus/map/static_dependencies.html' %}
+			{% endif %}
+		{% endblock js_app_dependencies %}
 
         {% captureas cosinnus_css_class %}{% if COSINNUS_CURRENT_APP == 'todo' %}app-todos{% elif COSINNUS_CURRENT_APP == 'note' %}app-main{% elif COSINNUS_CURRENT_APP == 'file' %}app-files{% elif COSINNUS_CURRENT_APP == 'event' %}app-calendar{% elif COSINNUS_CURRENT_APP %}app-{{ COSINNUS_CURRENT_APP }}{% else %}app-main{% endif %} {% if request.path == '/' %}landing{% endif %}{% endcaptureas %}
 
@@ -118,11 +125,17 @@
         {% block body_header %}{% endblock body_header %}
 
         {% block cosinnus_navbar %}
-        	{% cosinnus_menu "cosinnus/navbar.html" %}
+        	{% if SETTINGS.COSINNUS_USE_V2_NAVBAR or SETTINGS.COSINNUS_USE_V2_NAVBAR_ADMIN_ONLY and user.is_superuser %}
+        		{% cosinnus_menu_v2 "cosinnus/v2/navbar/navbar.html" %}
+        	{% else %}
+        		{% cosinnus_menu "cosinnus/navbar.html" %}
+        	{% endif %}
         {% endblock cosinnus_navbar %}
 
 
-        <div class="{% block container_classes %}container {{ cosinnus_css_class }}{% endblock container_classes %}">
+		{% include 'announcements/announcements.html' %}
+
+        <div class="{% block container_classes %}container {{ cosinnus_css_class }}{% endblock container_classes %}" {% block container_attributes %}{% endblock container_attributes %}>
 
             {% block main_page_header %}{% endblock main_page_header %}
 
@@ -169,7 +182,7 @@
         </div><!-- main container -->
 
         {% block footer %}
-            {% if not skip_page_footer %}
+            {% if SETTINGS.COSINNUS_V2_FORCE_SITE_FOOTER or not skip_page_footer and not SETTINGS.COSINNUS_USE_V2_NAVBAR and not SETTINGS.COSINNUS_USE_V2_DASHBOARD %}
 		        {% with portal_cms_roots=COSINNUS_CURRENT_PORTAL.wagtail_root_pages.all %}
 		        	{% if portal_cms_roots and portal_cms_roots.0.footer %}
 		        		<div class="footer-spacer"></div>

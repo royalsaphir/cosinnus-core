@@ -62,7 +62,7 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from cosinnus.utils.user import filter_active_users
 from cosinnus.utils.functions import resolve_class
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 
 import logging
 from cosinnus.templatetags.cosinnus_tags import is_superuser, full_name,\
@@ -284,7 +284,8 @@ class GroupCreateView(CosinnusGroupFormMixin, AvatarFormMixin, AjaxableFormMixin
         context['submit_label'] = _('Create')
         # if we have 'group=xx' in the GET, add the parent if we are looking at a project
         if 'group' in self.request.GET and 'parent' in kwargs['form'].forms['obj']._meta.fields:
-            init_parent = CosinnusGroup.objects.get_cached(pks=int(self.request.GET.get('group')))
+            init_parent = CosinnusGroup.objects.get_cached(slugs=self.request.GET.get('group'))
+            logger.warn('GROUP IS: %s' % init_parent)
             kwargs['form'].forms['obj'].initial['parent'] = init_parent
             kwargs['form'].forms['obj'].fields['parent'].initial = init_parent
         return context
@@ -522,6 +523,24 @@ class GroupListMineView(RequireLoggedInMixin, GroupListView):
 group_list_mine = GroupListMineView.as_view()
 
 
+class GroupListMineDeactivatedView(RequireLoggedInMixin, GroupListView):
+    paginate_by = None
+    
+    def get_queryset(self):
+        self.group_type = None
+        return self.model.objects.get_deactivated_for_user(self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        ctx = super(GroupListMineDeactivatedView, self).get_context_data(**kwargs)
+        ctx.update({
+            'hide_group_map': True,
+            'is_deactivated_groups_view': True,
+        })
+        return ctx
+
+group_list_mine_deactivated = GroupListMineDeactivatedView.as_view()
+
+
 class GroupListInvitedView(RequireLoggedInMixin, GroupListView):
     paginate_by = None
     
@@ -700,7 +719,7 @@ class GroupUserJoinView(SamePortalGroupMixin, GroupConfirmMixin, DetailView):
                 signals.user_group_invitation_accepted.send(sender=self, obj=self.object, user=self.request.user, audience=list(get_user_model()._default_manager.filter(id__in=self.object.admins)))
         except CosinnusGroupMembership.DoesNotExist:
             # default user-auto-join groups will accept immediately
-            if self.object.slug in getattr(settings, 'NEWW_DEFAULT_USER_GROUPS', []):
+            if self.object.slug in getattr(settings, 'COSINNUS_AUTO_ACCEPT_MEMBERSHIP_GROUP_SLUGS', []):
                 CosinnusGroupMembership.objects.create(
                     user=self.request.user,
                     group=self.object,
@@ -719,6 +738,24 @@ class GroupUserJoinView(SamePortalGroupMixin, GroupConfirmMixin, DetailView):
         
 
 group_user_join = GroupUserJoinView.as_view()
+
+
+class CSRFExemptGroupJoinView(GroupUserJoinView):
+    """ A CSRF-exempt group user join view that only works on groups/projects with slugs
+        in settings.COSINNUS_AUTO_ACCEPT_MEMBERSHIP_GROUP_SLUGS in this portal.
+    """
+    
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super(CSRFExemptGroupJoinView, self).dispatch(*args, **kwargs)
+    
+    def get_object(self, *args, **kwargs): 
+        group = super(CSRFExemptGroupJoinView, self).get_object(*args, **kwargs)
+        if group and group.slug not in getattr(settings, 'COSINNUS_AUTO_ACCEPT_MEMBERSHIP_GROUP_SLUGS', []):
+            raise PermissionDenied('The group/project requested for the join is not marked as auto-join!')
+        return group
+     
+group_user_join_csrf_exempt = CSRFExemptGroupJoinView.as_view()
 
 
 class GroupUserLeaveView(SamePortalGroupMixin, GroupConfirmMixin, DetailView):
@@ -1036,7 +1073,7 @@ class ActivateOrDeactivateGroupView(TemplateView):
                 messages.warning(self.request, _('This project/group is already active!'))
             else:
                 messages.warning(self.request, _('This project/group is already inactive!'))
-            return redirect(get_non_cms_root_url())
+            return redirect(get_non_cms_root_url(self.request))
             
         self.group = group
         return super(ActivateOrDeactivateGroupView, self).dispatch(request, *args, **kwargs)
@@ -1060,7 +1097,7 @@ class ActivateOrDeactivateGroupView(TemplateView):
             return redirect(self.group.get_absolute_url())
         else:
             messages.success(request, self.message_success_deactivate % {'team_name': self.group.name})
-            return redirect(get_non_cms_root_url())
+            return redirect(get_non_cms_root_url(self.request))
     
     def get_context_data(self, **kwargs):
         context = super(ActivateOrDeactivateGroupView, self).get_context_data(**kwargs)

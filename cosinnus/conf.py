@@ -152,6 +152,16 @@ class CosinnusConf(AppConf):
         'cosinnus_marketplace',
     ]
     
+    # a list of groups slugs for a portal, that do not require the group
+    # admins to accept join requests, instead the user will become a member immediately
+    # upon requesting membership
+    AUTO_ACCEPT_MEMBERSHIP_GROUP_SLUGS = []
+    
+    # if True, the entire /admin/ area is protected by 2-factor-authentication
+    # and no user that hasn't got a device set up can gain access.
+    # Set up at least one device at <host>/admin/otp_totp/totpdevice/ before activating this setting!
+    ADMIN_2_FACTOR_AUTH_ENABLED = False
+    
     # enable this to sign up new members to a cleverreach newsletter group
     CLEVERREACH_AUTO_SIGNUP_ENABLED = False
     # dict of language --> int group-id of the cleverreach groups to sign up
@@ -317,10 +327,10 @@ class CosinnusConf(AppConf):
     # this exists so we can blanket boost specific models for visibility without diving
     # into the SearchIndexes and boost logic.
     HAYSTACK_GLOBAL_MODEL_BOOST_MULTIPLIERS = {
-        'cosinnus_event.event': 0.65,
+        'cosinnus_event.event': 0.35,
         #'cosinnus.cosinnusproject': 1.0,
         #'cosinnus.cosinnussociety': 1.0,
-        #'cosinnus.cosinnusidea': 1.0,
+        'cosinnus.cosinnusidea': 1.2,
         'cosinnus.userprofile': 0.5,
     } 
     
@@ -439,7 +449,7 @@ class CosinnusConf(AppConf):
     MICROSITE_RENDER_EMPTY_APPS = True
     
     # how many public items per type should be shown on the microsite?
-    MICROSITE_PUBLIC_APPS_NUMBER_OF_ITEMS = 5
+    MICROSITE_PUBLIC_APPS_NUMBER_OF_ITEMS = 10
     
     # should twitter and flickr embed fields and display be active for microsites?
     MICROSITE_SOCIAL_MEDIA_FIELDS_ACTIVE = False
@@ -545,10 +555,40 @@ class CosinnusConf(AppConf):
     # whether to use celery on this instance
     USE_CELERY = False
     
+    # whether to use the new style navbar
+    USE_V2_NAVBAR = False
+    
+    # whether to use the new style navbar ONLY for admins
+    # does not need `USE_V2_NAVBAR` to be enabled
+    USE_V2_NAVBAR_ADMIN_ONLY = False
+    
+    # whether to use the new style user-dashboard
+    USE_V2_DASHBOARD = False    
+    
+    # whether to use the new style user-dashboard ONLY for admins 
+    # does not need `USE_V2_DASHBOARD` to be enabled
+    USE_V2_DASHBOARD_ADMIN_ONLY = False    
+    
+    # Debug: enable naive queryset picking for dashboard timeline
+    V2_DASHBOARD_USE_NAIVE_FETCHING = False
+    
+    # should the dashboard show marketplace offers, both as widgets and in the timeline?
+    V2_DASHBOARD_SHOW_MARKETPLACE = False
+    
+    # in v2, the footer is disabled by default. set this to True to enable it!
+    V2_FORCE_SITE_FOOTER = False
+    
     # not all servers are running Postgres >= 9.3 yet. as long as this is true, we cannot uniformly run some nicer queries
     DO_ALL_SERVERS_HAVE_PSQL_9_3 = False
     
+    # if true, an additional signup form field will be present
     SIGNUP_REQUIRES_PRIVACY_POLICY_CHECK = False
+    
+    # if true, during signup and in the user profile, an additional
+    # opt-in checkbox will be shown to let the user choose if they wish to 
+    # receive a newsletter
+    USERPROFILE_ENABLE_NEWSLETTER_OPT_IN = False
+    
     
 
 class CosinnusDefaultSettings(AppConf):

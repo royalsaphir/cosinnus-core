@@ -7,7 +7,17 @@
 <script src="{% static 'js/vendor/leaflet.markercluster-0.7.js' %}"></script>
 <script src="{% static 'js/vendor/masonry.pkgd.min.js' %}"></script>
 <script src="{% static 'js/vendor/imagesloaded.pkgd.min.js' %}"></script>
-<script src="{% static 'js/client.js' %}?v=0.18"></script>
+<script src="{% static 'js/client.js' %}?v=0.27"></script>
+
+{% comment %} Internet Explorer only: Bluebird Promise library implementation for compatibility {% endcomment %}
+<script type="text/javascript"> 
+	var ua = window.navigator.userAgent; 
+	var msie = ua.indexOf("MSIE "); 
+	if (msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) { 
+		document.write('<script src="{% static 'js/vendor/bluebird-promise-3.3.5.min.js' %}"><\/scr'+'ipt>');
+	} 
+</script>
+
 {% endaddtoblock %}
 
 {% addtoblock "css" %}
@@ -24,5 +34,8 @@
 	var COSINNUS_MAP_OPTIONS = {{ SETTINGS.COSINNUS_MAP_OPTIONS|json|safe }};
     var COSINNUS_PORTAL_INFOS = {% render_cosinnus_portal_info_json %};
     var COSINNUS_IDEAS_ENABLED = {% if SETTINGS.COSINNUS_IDEAS_ENABLED %}true{% else %}false{% endif %};
+    var COSINNUS_V2_DASHBOARD_SHOW_MARKETPLACE = {% if SETTINGS.COSINNUS_V2_DASHBOARD_SHOW_MARKETPLACE %}true{% else %}false{% endif %};
     var COSINNUS_SHOW_SUPERUSER_CONTROLS = {% if user|is_superuser %}true{% else %}false{% endif %};
 </script>
+
+{% include 'cosinnus/map/extra_head_map.html' %}

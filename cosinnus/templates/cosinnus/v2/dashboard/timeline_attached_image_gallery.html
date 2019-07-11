@@ -1,0 +1,46 @@
+{% load i18n cosinnus_tags thumbnail %}
+
+{% comment %}  
+    Parameters:
+        - object: the basetaggableobject object with attached_images
+        - max_images: max number of gallery preview frames to show
+{% endcomment %}
+
+<div class="flex-row">
+    {% with images=object.attached_images uuid=""|add_uuid %}
+        {% for image in images %}
+        	{% if max_images and forloop.counter > max_images %}
+            <span style="display: none">
+            {% else %}
+            <div class="flex-grow">
+            {% endif %}
+            	<div class="attached-image">
+	                <a href="{{ image.static_image_url }}" data-lightbox="attached-image-{{ uuid }}" data-lightbox-download="{{ image.static_image_url }}" data-title="{{ image.title }}" class="thumbnail cursor-zoom no-margin no-padding">
+	                    <img title='{{ image.title }}'
+	                    	{% if images|length == 1 %}
+	                    		src="{% thumbnail image.file 900x200 crop=1 upscale=1 %}"
+	                    	{% elif images|length == 2 %}
+	                    		src="{% thumbnail image.file 450x200 crop=1 upscale=1 %}"
+	                    	{% else %}
+	                    		src="{% thumbnail image.file 300x200 crop=1 upscale=1 %}"
+	                    	{% endif %}
+	                    	/>
+	                    
+	                    {% if max_images and forloop.counter == max_images and max_images|intify < images|length %}
+	                    	<div class="gallery-image-more-overlay">
+	                    		+{{ images|length|subtract:max_images|intify }}
+	                    	</div>
+	                    {% endif %}
+	                </a>
+                </div>
+            {% if max_images and forloop.counter > max_images %}
+            </span>
+            {% else %}
+            </div>
+            {% endif %}
+            {% if forloop.counter|divisibleby:3 and not max_images or forloop.counter|divisibleby:3 and forloop.counter < max_images|intify %}
+                </div><div class="flex-row">
+            {% endif %}
+        {% endfor %}
+    {% endwith %}
+</div>

@@ -1,0 +1,464 @@
+.v2-navbar, .v2-dashboard {
+	
+	font-family: @font-regular;
+	font-size: 14px;
+	color: @color-black;
+	text-align: left;
+	line-height: 18px;
+	
+	p {
+		margin: 9px 0;
+	} 
+	a:not(.no-select) {
+		cursor: pointer;
+	}
+	
+	.headline {
+		margin: 10px 20px 20px 20px;
+		font-size: 14px;
+		font-weight: bold;
+		color: @color-primary;
+		letter-spacing: 1px;
+		line-height: 21px;
+		text-transform: uppercase;
+		
+		/** no text select */
+		-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none;   /* Chrome/Safari/Opera */
+		-khtml-user-select: none;    /* Konqueror */
+		-moz-user-select: none;      /* Firefox */
+		-ms-user-select: none;       /* IE/Edge */
+		user-select: none;           /* non-prefixed version, currently not supported by any browser */
+		cursor: default;
+		
+		&.headline-big {
+			margin: 20px;
+			font-size: 20px;
+			line-height: 26px;
+		}
+		&.headline-condensed {
+			margin: 20px 20px 10px 20px;
+		}
+		&.no-side-margin {
+			margin-left: 0;
+			margin-right: 0;
+		}
+	}
+	a:hover .headline, a:active .headline {
+		color: @background-color;
+	}
+	.text-bold {
+		font-weight: bold;
+	}
+	.text-small {
+		font-size: 12px;
+	}
+	.label {
+		color: @color-dark-gray;
+		font-size: 12px;
+		line-height: 18px;
+	}
+	
+	.margin-small {
+		margin-bottom: 7px !important;
+	}
+	.margin-regular {
+		margin-bottom: 10px !important;
+	}
+	.margin-large {
+		margin-bottom: 20px !important;
+	}
+	.margin-extra-large {
+		margin-bottom: 40px !important;
+	}
+	.no-margin {
+		margin: 0;
+	}
+	.no-padding {
+		padding: 0;
+	}
+	.button {
+		/** TODO */
+	}
+	.flex-row {
+		display: flex;
+		flex-direction: row;
+		
+		&> div:not(:last-of-type)  {
+			margin-right: 8px;
+		}
+	}
+	.flex-grow {
+		flex-grow: 1;
+		flex-basis: 0;
+	}
+	
+	/** **** Lists of highlighted links **** */
+	
+	/** reset list styles */
+	ul.item-list, ul.item-list li {  
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		text-indent: 0;
+		width: 100%;
+	}
+	
+	ul.item-list {
+		font-size: 14px;
+		line-height: 35px;
+		
+		hr {
+			border-top: 1px solid @pale-border-color;
+			margin: 10px 20px;
+		}
+		.list-item {
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			white-space: nowrap;
+			color: @navbar-active-text-color;
+			padding: 0 15px;
+			
+			i.fas {
+				color: @navbar-active-text-color;
+				font-size: 16px;
+			}
+			&>div {
+				z-index: 3;
+				margin: 0 8px;
+			}
+			.item-icon.item-icon-offset i.fas {
+				vertical-align: middle;
+			}
+			.item-text {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				flex-grow: 2;
+				
+				&.item-text-dual {
+					line-height: 18px;
+					padding: 4px 0;
+					div {
+						display: inline-block;
+					}
+				}
+			}
+			.right-side-annotation {
+				margin-right: 15px;
+				max-width: 40%;
+				i.fas {
+					margin-right: 4px;
+					font-size: 14px;
+				}
+			}
+			/** 
+				Full width li with aligned items.
+				Underdrop is a full-screen-width background, while the other elements still retain their alignment 
+			*/
+			.li-underdrop {
+				position: fixed;
+				left: 0;
+				width: 100%;
+				margin: 0;
+				background-color: @background-color-secondary;
+				z-index: -1;
+				&:after {
+				    content: '.';
+				    visibility: hidden;
+				}
+			}
+			&.list-item-link {
+				color: @text-color-pale;
+				font-size: 12px;
+				.item-text {
+					line-height: 44px;
+				}
+			}
+			&.list-item-center {
+				text-align: center;
+			}
+			&.inactive {
+				color: @text-color-pale;
+			}
+		}
+		a.list-item.list-item-link:not(.inactive) {
+			&:hover, :active {
+				color: @text-highlight-color;
+				text-decoration: none;
+			}
+		}
+		a.list-item:not(.list-item-link):not(.inactive) {
+			&:hover, &:hover .li-underdrop {
+				background-color: @text-highlight-color;
+				text-decoration: none;
+				&, i.fas {
+					color: @background-color;
+				}
+			}
+		}
+	
+	}
+	
+	.truncated-oneline {
+		white-space: nowrap;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	}
+}
+
+
+
+/** Used in the wrapper for markdown and any other kind 
+	of user-generated text */
+.v2-textfield {
+	
+    font-size: 14px;
+	line-height: 18px;
+    word-break: break-word;
+    white-space: normal;
+    color: @text-color;
+    
+    a {
+		color: @text-highlight-color !important;
+	}
+	
+	h1, h2, h3, h4, h5, h6 {
+		font-size: 14px;
+		font-weight: bold;
+		margin: 18px 0 9px 0;
+	}
+	h1 {
+		margin-top: 36px;
+	}
+	
+	p {
+		padding: 0;
+		margin: 0;
+    	color: @text-color;
+	}
+	p:not(:last-of-type) {
+		margin-bottom: 9px;
+	}
+
+	ul, ol {
+		padding-left: 26px;
+		ul, ol {
+			padding-left: 22px;
+		}
+	}
+	img {
+        display: inline-block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 9px 9px 0;
+    }
+	
+	/* Hide linebreaks in sublists (those linebreaks are some markdown glitch) */
+	ul br, ol br, ul br {
+	    display: none;
+	}
+	
+}
+
+
+.v2-dropdown {
+	z-index: 3;
+	
+	&, i.fas {
+		color: @text-color-extra-pale;
+	}
+	a.dropdown-toggle {
+		padding: 10px;
+		&:hover, &:hover i.fas {
+			color: @text-highlight-color;
+		}
+	}
+	
+	ul.dropdown-menu {
+		padding: 0;
+		left: unset;
+		right: 0;
+		min-width: 100px;
+		
+		li a {
+			padding: 5px 10px;
+			font-weight: normal;			
+			
+			&:hover, &:active {
+				text-decoration: none;
+				color: @background-color;
+				background-color: @text-highlight-color;
+			}
+		}
+		
+		li:not(:last-of-type) {
+			border-bottom: 1px solid @border-color;
+		}
+	}
+	
+}
+
+
+.onoffswitch {
+    position: relative; width: 28px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    display: none;
+}
+.onoffswitch-label {
+    display: block; overflow: hidden; cursor: pointer;
+    border: 2px solid @color-primary; border-radius: 16px;
+}
+.onoffswitch-inner {
+    display: block; width: 200%; margin-left: -100%;
+    transition: margin 0.3s ease-in 0s;
+}
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+    display: block; float: left; width: 50%; height: 13px; padding: 0; line-height: 13px;
+    font-size: 16px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+    box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+    content: "";
+    padding-left: 10px;
+    background-color: @color-primary; 
+    color: #FFFFFF;
+}
+.onoffswitch-inner:after {
+    content: "";
+    padding-right: 10px;
+    background-color: #FFFFFF; color: #666666;
+    text-align: right;
+}
+.onoffswitch-switch {
+    display: block; width: 17px; margin: 0;
+    background: #FFFFFF;
+    position: absolute; top: 0; bottom: 0;
+    right: 12px;
+    border: 2px solid @color-primary; border-radius: 16px;
+    transition: all 0.3s ease-in 0s; 
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label { 
+	.onoffswitch-switch {
+	}
+    .onoffswitch-inner {
+    	margin-left: 0;
+	}
+    .onoffswitch-switch {
+	    right: 0px; 
+	}
+}
+.onoffswitch-checkbox:not(:checked) + .onoffswitch-label {
+	border-color: @text-color-pale;
+	
+	.onoffswitch-switch {
+		border-color: @text-color-pale;
+	}
+}
+.onoffswitch-frame:hover .onoffswitch-label {
+	border-color: @color-primary;
+	
+	.onoffswitch-switch {
+		border-color: @color-primary;
+	}
+}
+.onoffswitch-text-label {
+    vertical-align: top;
+    font-size: 14px;
+    padding-top: 3px;
+    cursor: pointer;
+    
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+.onoffswitch-frame {
+	cursor: pointer;
+	
+	td:first-of-type {
+		padding-right: 10px;
+	}
+}
+
+
+.arrow-box {
+	background-color: @background-color-secondary;
+	border: 1px solid @border-color;
+	
+    position: absolute;
+	z-index: 10;
+    margin-left: -150px;
+    width: 300px;
+    white-space: normal;
+    padding: 5px;
+    margin-top: 15px;
+}
+.arrow-box:after, .arrow-box:before {
+	bottom: 100%;
+	left: 50%;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+.arrow-box:after {
+	border-color: rgba(0, 0, 0, 0);
+	border-bottom-color: @background-color-secondary;
+	border-width: 10px;
+	margin-left: -10px;
+}
+.arrow-box:before {
+	border-color: rgba(0, 0, 0, 0);
+	border-bottom-color: @border-color;
+	border-width: 11px;
+	margin-left: -11px;
+}
+
+
+/** Desktop only */
+@media (min-width: 768px) {
+	.v2-navbar, .v2-dashboard {
+		.mobile-only {
+		    display: none;
+		}
+	}
+}
+
+/** Mobile only */
+@media (max-width: 767px) {
+	
+	.v2-navbar, .v2-dashboard {
+		.mobile-hidden {
+            display: none;
+        }
+        .mobile-only {
+            display: inherit;
+        }
+	
+		.mobile-flex-column {
+			display: flex;
+			flex-direction: column;
+			
+			&> div:not(:last-of-type)  {
+				margin-bottom: 8px;
+			}
+		}
+		
+	}
+	
+	.v2-dropdown {
+		ul.dropdown-menu {
+			left: unset;
+    		right: 0;
+		}
+	}
+	
+	
+}
+

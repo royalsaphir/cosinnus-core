@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1dev\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-14 18:24+0100\n"
-"PO-Revision-Date: 2019-02-14 18:24+0100\n"
+"POT-Creation-Date: 2019-07-03 17:47+0200\n"
+"PO-Revision-Date: 2019-07-05 17:15+0100\n"
 "Last-Translator: Sebastian Henschel <sh@sinnwerkstatt.com>\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -110,6 +110,29 @@ msgid "Deactivate users (will keep all all items they created on the site)"
 msgstr ""
 "Ausgewählte Benutzer deaktivieren (deren erstellte Items bleiben auf der "
 "Seite erhalten)"
+
+msgid ""
+"The email address for the account you are trying to use needs to be "
+"activated before you can log in."
+msgstr ""
+"Die Email-Adresse des Accounts, mit dem du versuchst einzuloggen, muss erst "
+"bestätigt werden."
+
+#, python-format
+msgid ""
+"If you have not received an activation email yet, please try signing up "
+"again or contact our support at %(email)s!"
+msgstr ""
+"Wenn du noch keine Mail mit einem Bestätigungslink bekommen hast, "
+"registriere dich bitte erneut oder kontaktiere unseren Support unter "
+"%(email)s!"
+
+msgid ""
+"If you have not received an activation email yet, please try signing up "
+"again or contact our support!"
+msgstr ""
+"Wenn du noch keine Mail mit einem Bestätigungslink bekommen hast, "
+"registriere dich bitte erneut oder kontaktiere unseren Support!"
 
 #, python-format
 msgid ""
@@ -632,6 +655,14 @@ msgstr "Slug"
 msgid "Description"
 msgstr "Beschreibung"
 
+msgid "Support Email"
+msgstr "Support Email"
+
+msgid "This email is shown to users as contact address on many pages"
+msgstr ""
+"Diese Email wird den Benutzern als Kontakt und Support-Adresse auf vielen "
+"Seiten angezeigt."
+
 msgid "Website"
 msgstr "Webseite"
 
@@ -676,6 +707,9 @@ msgstr ""
 "Wenn aktiv, müssen neu registrierte Benutzer oder die, die ihre Email "
 "ändern, einen Bestätigungslink klicken den sie per email erhalten, um ihre "
 "Email-Adresse zu bestätigen."
+
+msgid "ToS Version"
+msgstr "AGB Version"
 
 msgid "Background Image"
 msgstr "Hintergrundbild"
@@ -1046,6 +1080,19 @@ msgstr "Verknüpftes Objekt"
 msgid "Attached objects"
 msgstr "Verknüpftes Objekt"
 
+#. Translators: __INCLUDE_JS_PO__
+msgid "User"
+msgstr "Benutzer_in"
+
+msgid "Visited"
+msgstr "Besucht"
+
+msgid "LastVisited"
+msgstr "ZuletztBesucht"
+
+msgid "LastVisiteds"
+msgstr "ZuletztBesuchte"
+
 msgid "Path"
 msgstr "Pfad"
 
@@ -1054,10 +1101,6 @@ msgstr "Reflected Object"
 
 msgid "Reflected Objects"
 msgstr "Reflected Objects"
-
-#. Translators: __INCLUDE_JS_PO__
-msgid "User"
-msgstr "Benutzer_in"
 
 #. Translators: __INCLUDE_JS_PO__
 msgid "Liked"
@@ -1459,6 +1502,40 @@ msgstr "Aktuell unterstützen folgende Browser den Ordner-Upload:"
 
 msgid "File and Folder Upload"
 msgstr "Datei- und Ordner hochladen"
+
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Bitte korrigiere den Fehler unten."
+msgstr[1] "Bitte korrigiere die Fehler unten."
+
+msgid "2-factor access only"
+msgstr "Zugriff nur mit 2-Faktor"
+
+msgid "OTP Device:"
+msgstr "2-Faktor Authentifikator-Gerät"
+
+msgid "Enter the generated number code from your authenticator app"
+msgstr "Gib den generierten Nummerncode deiner Authentikator-App ein"
+
+msgid "Forgotten your password or username?"
+msgstr "Benutzername oder Passwort vergessen?"
+
+msgid "Validate"
+msgstr "Authentifizieren"
+
+msgid "Log out"
+msgstr "Ausloggen"
+
+msgid "You are logged in as"
+msgstr "Du bist eingeloggt als"
+
+msgid ""
+"It appears that no authentication device is attached to your account. Please "
+"ask another admin to set one up and send you the QR code!"
+msgstr ""
+"Es scheint als ob kein Authentifikator-Gerät mit deinem Konto verbunden ist. "
+"Bitte bitte einen anderen Admin darum, dir ein Gerät einzurichten und dir "
+"den QR-code zu schicken!"
 
 msgid "Services"
 msgstr "Dienste"
@@ -1992,6 +2069,9 @@ msgstr "Projekt/Gruppe reaktivieren"
 msgid "Deactivate Project/Group"
 msgstr "Projekt/Gruppe deaktivieren"
 
+msgid "Deactivated Projects and Groups"
+msgstr "Deaktivierte Projekte und Gruppen"
+
 msgid "Warning!"
 msgstr "Achtung!"
 
@@ -2013,11 +2093,11 @@ msgstr ""
 "wird auf der Webseite unsichtbar sein."
 
 msgid ""
-"This process is reversible. You can reactivate the project/group from the "
-"project/group list page at any time."
+"This process is reversible. You can reactivate the project/group from your "
+"user profile at any time."
 msgstr ""
 "Diese Aktion kann rückgängig gemacht werden. Du kannst das Projekt/Gruppe "
-"jederzeit von der Projekt/Gruppen-Listenseite aus reaktivieren"
+"jederzeit von deinem Benutzerprofil aus reaktivieren."
 
 msgid "Re-Activate"
 msgstr "Reaktivieren"
@@ -2477,11 +2557,18 @@ msgid "Facebook integration is available after you created the project!"
 msgstr ""
 "Die Facebook-Integration wird verfügbar sobald du das Projekt erstellt hast!"
 
+#. Translators: __INCLUDE_JS_PO__
 msgid "Invitations"
 msgstr "Einladungen"
 
+msgid "About me"
+msgstr "Über mich"
+
 msgid "Related to"
 msgstr "Verwandt mit"
+
+msgid "Your Profile"
+msgstr "Über mich"
 
 msgid "Overview"
 msgstr "Übersicht"
@@ -3572,9 +3659,6 @@ msgstr "Passwort"
 msgid "Password change"
 msgstr "Passwort ändern"
 
-msgid "Your Profile"
-msgstr "Über mich"
-
 msgid "Change password"
 msgstr "Passwort ändern"
 
@@ -3984,6 +4068,89 @@ msgid "Search this area"
 msgstr "In diesem Ausschnitt suchen"
 
 #. Translators: __INCLUDE_JS_PO__
+#| msgid "Membership requests"
+msgid "Membership Requests"
+msgstr "Mitgliedschaftsanträge"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "My Groups and Projects"
+msgstr "Meine Gruppen und Projekte"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Show more Projects of this Group"
+msgstr "Weitere Projekte dieser Gruppe anzeigen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "You are not in any groups or projects yet"
+msgstr "Du bist noch in keinen Gruppen oder Projekten Mitglied"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Create new Group"
+msgstr "Neue Gruppe anlegen"
+
+#
+#. Translators: __INCLUDE_JS_PO__
+msgid "Create new Project"
+msgstr "Neues Projekt anlegen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Browse all Groups"
+msgstr "Alle Gruppen anzeigen"
+
+#
+#. Translators: __INCLUDE_JS_PO__
+msgid "Browse all Projects"
+msgstr "Alle Projekte anzeigen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Ideas I am following"
+msgstr "Ideen, die mir gefallen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "You are not following any ideas yet."
+msgstr "Du folgst noch keinen Ideen."
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Post new Idea"
+msgstr "Neue Idee eintragen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Browse all Ideas"
+msgstr "Alle Ideen anzeigen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Search for Ideas"
+msgstr "Nach Ideen suchen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "You have not RSVPed to any Events."
+msgstr "Du hast bei keinen aktuellen Veranstaltungen zugesagt"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Add Event"
+msgstr "Veranstaltung hinzufügen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Go to Calendar"
+msgstr "Zum Kalender"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Network"
+msgstr "Netzwerk"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "On the Map"
+msgstr "Auf der Karte"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "In my Groups and Projects"
+msgstr "In meinen Gruppen und Projekten"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Topic"
+msgstr "Thema"
+
+#. Translators: __INCLUDE_JS_PO__
 msgid "You"
 msgstr "Du"
 
@@ -4145,6 +4312,76 @@ msgstr "Projekt beitreten"
 msgid "Message Project"
 msgstr "Projekt anschreiben"
 
+#. Translators: __INCLUDE_JS_PO__
+msgid "Move up"
+msgstr "Nach oben"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Move down"
+msgstr "Nach unten"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "There was an error loading the widget"
+msgstr "Es gab einen Fehler beim Laden der Inhalte"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Show more"
+msgstr "Weitere anzeigen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "There are no items yet"
+msgstr "Noch keine Inhalte vorhanden."
+
+#
+#. Translators: __INCLUDE_JS_PO__
+msgid "Groups and Projects"
+msgstr "Gruppen und Projekte"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid ""
+"Here you can find an overview of your Groups and Projects once you become "
+"active in one or more of them."
+msgstr ""
+"Hier findest du eine Übersicht über deine Gruppen und Projekte. Noch bist du "
+"in keiner Gruppe oder einem Projekt aktiv."
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "You can create Groups or Projects via the '+' button in the header."
+msgstr ""
+"Du kannst eigene Gruppen oder Projekte über den '+'-Button im Header anlegen."
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Ideas I like"
+msgstr "Ideen, die mir gefallen"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Here you can find an overview of Ideas you have liked."
+msgstr "Hier findest du eine Übersicht über Ideen, die dir gefallen."
+
+#. Translators: __INCLUDE_JS_PO__
+msgid ""
+"You can create your own Ideas via the '+' button in the header or you can "
+"discover existing Ideas here"
+msgstr ""
+"Du kannst eigene Ideen über den '+'-Button im Header anlegen oder bestehende "
+"Ideen hier entdecken"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Discover"
+msgstr "Entdecken"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Only content from my Groups and Projects"
+msgstr "Nur Beiträge aus meinen Gruppen und Projekten"
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "We could not load more data at this time."
+msgstr "Wir konnten leider keine weiteren Daten laden."
+
+#. Translators: __INCLUDE_JS_PO__
+msgid "Retry"
+msgstr "Erneut versuchen"
+
 msgid "Quick Join"
 msgstr "Schnellstart"
 
@@ -4177,9 +4414,6 @@ msgstr "Gib ein Einladungs-Token ein:"
 
 msgid "For example"
 msgstr "Zum Beispiel"
-
-msgid "About me"
-msgstr "Über mich"
 
 msgid "Edit Profile"
 msgstr "Profil bearbeiten"
@@ -4344,9 +4578,6 @@ msgstr ""
 
 msgid "Your privacy: You are in control!"
 msgstr "Deine Privatsphäre: Du hast die Kontrolle!"
-
-msgid "User Dashboard"
-msgstr "Mein Dashboard"
 
 msgid "Enable posting to Facebook"
 msgstr "Posten auf Facebook aktivieren"
@@ -4610,6 +4841,148 @@ msgstr ""
 "Wir konnten aufgrund eines Fehlers deine Gruppen nicht von Facebook lesen. "
 "Bitte kontaktiere einen Administrator!"
 
+msgid "Are you sure you want to delete the item?"
+msgstr "Bist du sicher dass du diesen Inhalt löschen willt?"
+
+#
+msgid "Delete comment"
+msgstr "Kommentar löschen"
+
+msgid "Report offensive comment"
+msgstr "Anstößigen Kommentar melden"
+
+msgid "Write comment..."
+msgstr "Kommentar schreiben..."
+
+#, python-format
+msgid "Show all %(count)s comments"
+msgstr "Zeige alle %(count)s Kommentare"
+
+msgid "Timeline"
+msgstr "Aktivitäten"
+
+msgid "Contents"
+msgstr "Inhalte"
+
+msgid "Close to me"
+msgstr "In meiner Nähe"
+
+msgid "Show large map"
+msgstr "Große Karte anzeigen"
+
+msgid "Do not show this again"
+msgstr "Hinweis nicht wieder anzeigen"
+
+msgctxt "this is a two-line text that says 'Welcome to <WebsiteName>'"
+msgid "Welcome"
+msgstr "Willkommen"
+
+#, python-format
+msgctxt "this is a two-line text that says 'Welcome to <WebsiteName>'"
+msgid "to %(portal_name)s"
+msgstr "auf %(portal_name)s"
+
+#, python-format
+msgid ""
+"Good to see you! At %(portal_name)s you can collaborate with others in "
+"Projects and Groups. Whether Initiative, Organisation, or Network - "
+"%(portal_name)s offers all the necessary tools for your online collaboration."
+msgstr ""
+"Schön, dass du da bist! Auf %(portal_name)s kannst du in Gruppen und "
+"Projekten mit anderen zusammenarbeiten. Ob Initiative, Organisation oder "
+"Netzwerk - %(portal_name)s bietet dir die nötigen Tools zur Online-"
+"Zusammenarbeit."
+
+msgid ""
+"Organize your projects or initiatives efficiently with your fellow "
+"campaigners. All important tools for collaborating in one place: News, Pads, "
+"Events, Todos, and more."
+msgstr ""
+"Organisier dich effizient mit deinen MitstreiterInnen aus deinem Projekt "
+"oder deiner Initiative. Alle wichtigen Tools für eine gute Zusammenarbeit, "
+"wie Neuigkeiten, Pads, Kalender, Aufageben, etc. an einem Ort."
+
+msgid ""
+"Groups help improve communication and collaboration in large networks or "
+"organisations. Within a Group you can bring together several smaller "
+"projects or workgroups."
+msgstr ""
+"Mit Gruppen kannst du die Kommunikation und Zusammenarbeit in großen "
+"Netzwerken oder Organisationen vereinfachen. Unter einer Gruppe könnt ihr "
+"mehrere kleine Projekte, Arbeitsgruppen oder -kreise abbilden."
+
+msgid ""
+"What will our region look like in the future? What is your idea for an "
+"environmentally friendly and sustainable region? Find co-campaigners for "
+"your project ideas."
+msgstr ""
+"Wie sieht unsere Region in der Zukunft aus? Was ist deine Idee für eine "
+"klimafreundliche und nachhaltige Region? Finde MitstreiterInnen für deine "
+"Projektideen."
+
+msgid "What's happening where and when? What's to discover? Where to meet?"
+msgstr "Was ist wann wo los? Was gibt's zu erleben? Wo trifft man sich?"
+
+msgid "What's the latest news?"
+msgstr "Was gibt's Neues?"
+
+msgid ""
+"Your recently visited Pads, Files, Events, Todos and other content will be "
+"shown here."
+msgstr ""
+"Hier findest du eine Übersicht über die von dir zuletzt genutzten Pads, "
+"Dateien, Termine, Aufgaben und andere Inhalte aus deinen Projekten und "
+"Gruppen."
+
+msgid "You created an idea"
+msgstr "Du hast eine Idee erstellt"
+
+msgctxt ""
+"This appears next to new items in the timeline, as in '<Jane> created a new "
+"item'"
+msgid "created an idea"
+msgstr "hat eine Idee erstellt"
+
+msgid "Menu"
+msgstr "Menü"
+
+msgid "Quick Search"
+msgstr "Schnellsuche"
+
+#
+msgid "Create content"
+msgstr "Inhalt erstellen"
+
+msgid "Home"
+msgstr "Startseite"
+
+msgid "Nachrichten"
+msgstr "Messages"
+
+msgid "Change language"
+msgstr "Sprache ändern"
+
+msgid "Register a new account"
+msgstr "Neues Konto registrieren"
+
+#| msgid "Offers"
+msgid "Offer"
+msgstr "Inserat"
+
+msgid ""
+"Do you have something to share, sell or give away? Are you searching for "
+"something?"
+msgstr ""
+"Hast du etwas, das du teilen, verkaufen oder verschenken möchtest? Suchst du "
+"nach etwas Bestimmtem?"
+
+#| msgid "Post new Idea"
+msgid "Post new Offer"
+msgstr "Neues Inserat eintragen"
+
+msgid "Edit My Profile"
+msgstr "Profil-Einstellungen"
+
 msgid "Jetzt anmelden und mitgestalten"
 msgstr "Jetzt anmelden und mitgestalten"
 
@@ -4675,6 +5048,20 @@ msgstr "Bitte akzeptieren Sie unsere  Nutzungsbedingungen"
 
 msgid "Ich erkläre mich mit den Nutzungsbedingungen einverstanden"
 msgstr "Ich erkläre mich mit den Nutzungsbedingungen einverstanden"
+
+msgid "Change of Terms of Services and Privacy Policy"
+msgstr "Änderung unserer Datenschutz-/und Nutzungsbedingungen"
+
+msgid ""
+"We prioritise the protection of your data, so we updated our privacy policy "
+"and terms of services. To continue enjoying an optimal use of our plattform, "
+"we encourage you to read and accept the modifications."
+msgstr ""
+"Da uns ein umfangreicher Schutz euer Daten sowie an die neue Rechtslage "
+"angepasste Nutzungsbedingungen am Herzen liegen, haben wir diese "
+"überarbeitet. Damit ihr die Plattform weiter optimal nutzen könnt, bitten "
+"wir euch die geänderten AGBs und Datenschutzbedingungen anzuschauen und zu "
+"akzeptieren."
 
 #, python-format
 msgid ""
@@ -4998,7 +5385,7 @@ msgstr ""
 "Super! Wir schicken jetzt die Einladungen an folgende E-Mail Adressen: %s"
 
 msgid "There was an error when trying to delete the invitation."
-msgstr "Es gab einen Fehler beim Löshen der Einladung."
+msgstr "Es gab einen Fehler beim Löschen der Einladung."
 
 msgid "The invitation was successfully deleted."
 msgstr "Die Einladung wurde erfolgreich gelöscht."
@@ -5287,14 +5674,6 @@ msgstr ""
 "werden bevor du dich einloggen kannst. Wir schicken dir eine Email sobald "
 "das passiert."
 
-msgid ""
-"Welcome! You were invited to the following projects and groups. Please click "
-"the dropdown button to accept or decline the invitation for each of them!"
-msgstr ""
-"Willkommen! Du wurdest bereits in folgende Projekte und Gruppen eingeladen. "
-"Bitte klicke den Ausklappen-Button der Einladungen, die du annehmen oder "
-"ablehnen möchtest!"
-
 msgid "The unsubscribe link you have clicked does not seem to be valid!"
 msgstr ""
 "Der Abbestellen-Link, den du geklickt hast, scheint nicht gültig zu sein!"
@@ -5307,6 +5686,14 @@ msgstr ""
 "Wir haben deine Email-Adresse \"%(email)s\" von unserer Mailingliste "
 "entfernt. Du erhältst ab sofort keine Emails mehr von uns!"
 
+msgid ""
+"Welcome! You were invited to the following projects and groups. Please click "
+"the dropdown button to accept or decline the invitation for each of them!"
+msgstr ""
+"Willkommen! Du wurdest bereits in folgende Projekte und Gruppen eingeladen. "
+"Bitte klicke den Ausklappen-Button der Einladungen, die du annehmen oder "
+"ablehnen möchtest!"
+
 #, python-format
 msgid ""
 "You are not currently a member of %s! If you wish you can request to become "
@@ -5317,6 +5704,15 @@ msgstr ""
 
 msgid "Your changes have been saved."
 msgstr "Deine Änderungen wurden übernommen."
+
+#~ msgid "Switch Portal"
+#~ msgstr "Portal wechseln"
+
+#~ msgid "You have not liked any ideas yet"
+#~ msgstr "Du hast noch keine Ideen geliked"
+
+#~ msgid "User Dashboard"
+#~ msgstr "Mein Dashboard"
 
 #~ msgid "Microsite Wallpaper"
 #~ msgstr "Microsite Hintergrundbild"

@@ -54,7 +54,9 @@ from django.templatetags.static import static
 from cosinnus.models.mixins.indexes import IndexingUtilsMixin
 from cosinnus.core.registries.attached_objects import attached_object_registry
 from django.apps import apps
-from cosinnus.models.tagged import LikeableObjectMixin
+from cosinnus.models.tagged import LikeableObjectMixin, LastVisitedMixin
+import datetime
+from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger('cosinnus')
 
@@ -340,6 +342,22 @@ class CosinnusGroupManager(models.Manager):
         """
         return self.get_for_user_pks(user, include_public, member_status_in=[MEMBERSHIP_ADMIN,], includeInactive=includeInactive)
     
+    def get_deactivated_for_user(self, user):
+        """ Returns for a user all groups and projects they are admin of that have been deactivated.
+            For superusers, returns *all* deactivated groups and projects!
+            Note: uncached! 
+        """
+        from cosinnus.utils.permissions import check_user_superuser
+        all_inactive_groups = self.get_queryset().filter(portal_id=CosinnusPortal.get_current().id, is_active=False)
+        
+        # admins can see *all* inactive groups. for the rest of the users, filter the list to groups they are admin of.
+        if check_user_superuser(user):
+            my_inactive_groups = all_inactive_groups
+        else:
+            my_inactive_groups = all_inactive_groups.filter(id__in=self.get_for_user_group_admin_pks(user, includeInactive=True))
+        return my_inactive_groups
+        
+    
     def with_deactivated_app(self, app_name):
         """
         :returns: An iterator over all groups that have a specific cosinnus app deactivated.
@@ -473,6 +491,7 @@ class CosinnusPortal(models.Model):
     slug = models.SlugField(_('Slug'), max_length=50, unique=True, blank=True)
     
     description = models.TextField(verbose_name=_('Description'), blank=True)
+    support_email = models.EmailField(verbose_name=_('Support Email'), help_text=_('This email is shown to users as contact address on many pages'), blank=True)
     website = models.URLField(_('Website'), max_length=100, blank=True, null=True)
     welcome_email_text = models.TextField(verbose_name=_('Welcome-Email Text'), 
         blank=True, null=True, editable=True, 
@@ -496,6 +515,9 @@ class CosinnusPortal(models.Model):
     
     # The different keys used for this are static variables in CosinnusPortal!
     saved_infos = JSONField(default={})
+    
+    tos_date = models.DateTimeField(_('ToS Version'), default=datetime.datetime(1999, 1, 1, 13, 37, 0),
+        help_text='This is used to determine the date the newest ToS have been released, that users have acceppted. When a portal`s ToS update, set this to a newer date to have a popup come up for all users whose `settings.tos_accepted_date` is not after this date.')
     
     # css fields for custom portal styles
     background_image = models.ImageField(_('Background Image'),
@@ -629,7 +651,7 @@ class CosinnusPortal(models.Model):
         
 
 @python_2_unicode_compatible
-class CosinnusBaseGroup(LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFieldMixin, 
+class CosinnusBaseGroup(LastVisitedMixin, LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFieldMixin, 
                         VideoEmbedFieldMixin, models.Model):
     TYPE_PROJECT = 0
     TYPE_SOCIETY = 1
@@ -981,7 +1003,7 @@ class CosinnusBaseGroup(LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFiel
         return image_thumbnail(self.avatar, size)
 
     def get_avatar_thumbnail_url(self, size=(80, 80)):
-        return image_thumbnail_url(self.avatar, size) or static('images/group-avatar-placeholder.png')
+        return image_thumbnail_url(self.avatar, size) or static('images/group-avatar-placeholder-small.png')
     
     def get_image_field_for_icon(self):
         return self.avatar or static('images/group-avatar-placeholder.png')
@@ -1004,7 +1026,14 @@ class CosinnusBaseGroup(LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFiel
             cache.set(CosinnusGroupManager._GROUP_LOCATIONS_CACHE_KEY % (CosinnusPortal.get_current().id, self.id),
                   locations, settings.COSINNUS_GROUP_LOCATIONS_CACHE_TIMEOUT)
         return locations
-        
+    
+    @property
+    def is_default_user_group(self):
+        return self.slug in getattr(settings, 'NEWW_DEFAULT_USER_GROUPS', [])
+    
+    @property
+    def is_forum_group(self):
+        return self.slug == getattr(settings, 'NEWW_FORUM_GROUP_SLUG', None)
         
     def _get_media_image_path(self, file_field, filename_modifier=None):
         """Gets the unique path for each image file in the media directory"""
@@ -1046,7 +1075,7 @@ class CosinnusBaseGroup(LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFiel
                     'upscale': 'smart',
                     'size': size,
                 })
-            except InvalidImageFormatError:
+            except (InvalidImageFormatError, OSError, Exception):
                 if settings.DEBUG:
                     raise
             
@@ -1123,6 +1152,10 @@ class CosinnusBaseGroup(LikeableObjectMixin, IndexingUtilsMixin, FlickrEmbedFiel
             return []
         parents_children = self.get_children(for_parent_id=self.parent_id)
         return [child for child in parents_children if not child.id == self.id]
+    
+    def get_content_type_for_last_visited(self):
+        """ Overriding from `LastVisitedMixin` to always use the same group ct """
+        return ContentType.objects.get_for_model(get_cosinnus_group_model())
     
 
 class CosinnusGroup(CosinnusBaseGroup):

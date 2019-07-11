@@ -1,0 +1,47 @@
+{% extends 'userdashboard/base-widget' %}
+{% import "include/macros.html" as macros %}
+
+{% block title %}
+    {# Translators: __INCLUDE_JS_PO__ #}
+	{% trans "Groups and Projects" %}
+{% endblock %}
+
+{% block content %}
+	
+	{% if group_clusters|length > 0 %}
+		<ul class="item-list">
+			{% for cluster in group_clusters %}
+				{% for item in cluster %}
+					{% if item.hasmorelink %}
+						<li>
+							<a class="list-item list-item-link" href="#" role="button" titledby=".item-text"> 
+								<div id="more-link1" class="item-text">
+					                {# Translators: __INCLUDE_JS_PO__ #}
+									{% trans "Show more Projects of this Group" %}
+								</div>
+							<a>
+						</li>
+					{% else %}
+						{{ macros.listItem(item.text, item.url, item.icon, is_emphasized=item.is_emphasized) }}
+					{% endif %}
+				{% endfor %}
+			
+				{% if not loop.last %}
+					<li>
+						<hr>
+					</li>
+				{% endif %}
+			{% endfor %}
+		</ul>
+	{% else %}
+		<div class="widget-info-box no-select">
+            {# Translators: __INCLUDE_JS_PO__ #}
+			{% trans "Here you can find an overview of your Groups and Projects once you become active in one or more of them." %}
+			<br/>
+			<br/>
+            {# Translators: __INCLUDE_JS_PO__ #}
+			{% trans "You can create Groups or Projects via the '+' button in the header." %}
+		</div>
+	{% endif %}
+	
+{% endblock %}

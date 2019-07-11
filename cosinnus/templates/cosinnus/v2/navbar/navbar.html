@@ -1,0 +1,294 @@
+{% load i18n static cosinnus_tags thumbnail %}
+
+<nav id="v2-navbar" class="v2-navbar" role="navigation">
+    <div class="nav-content">
+    	<div class="nav-section nav-brand">
+    		{% if request.user.is_authenticated %}
+	            <a class="nav-button burger-menu" rel="toggle" role="button" title="{% trans "Menu" %}" 
+			    		aria-expanded="false" aria-controls="main-collapse"
+			    		data-toggle="collapse" data-target="#main-collapse"> 
+		    		<i class="fas fa-fw fa-bars"></i>
+		    		{% with total_counter=groups_invited_count|add_num:group_requests_count %}
+			    		{% if total_counter > 0 %}
+			    			<span class="message-counter"> {{ total_counter }}</span>
+			    		{% endif %}
+		    		{% endwith %}
+	    		</a>
+    		{% endif %}
+    		
+            <a class="nav-button" href="{% url "cosinnus:user-dashboard" %}" title="{% trans "Dashboard" %}">
+            	{% include 'cosinnus/v2/navbar/brand.html' %}
+            </a>
+            <div class="brand-links mobile-hidden">
+            	{% include 'cosinnus/v2/navbar/brand_links.html' %}
+            </div>
+            
+            {% if not SETTINGS.COSINNUS_USE_V2_NAVBAR and SETTINGS.COSINNUS_USE_V2_NAVBAR_ADMIN_ONLY and user.is_superuser %}
+	            <a class="nav-button nav-header-textlink hidden-during-search" href="#">
+	            	***ADMIN-ONLY TEST PHASE***
+	            </a>
+        	{% endif %}
+    	</div>
+    </div>
+    
+    
+    <div class="nav-section nav-search" id="nav-quicksearch">
+    	<div class="">
+			<a class="nav-button nav-button-search show-active" title="{% trans "Search" %}"> 
+				<i class="fas fa-fw fa-search"></i>
+			</a>
+		</div>
+		<input id="search" class="nav-search-box" name="search" title="{% trans "Quick Search" %}" autocomplete="off">
+		<div class="">
+			<a class="nav-button nav-button-search show-inactive" title="{% trans "Search" %}"> 
+				<i class="fas fa-fw fa-search"></i>
+			</a>
+		</div>
+		<div class="nav-quicksearch-results nav-dropdown" id="nav-quicksearch-results">
+	    	{% comment %} This is the backbone App 'module-navbar-quicksearch! {% endcomment %}
+		</div>
+		<div class="dropdown-underdrop show-active"></div>
+		<div class="nav-search-backdrop"></div>
+    </div>
+	<script>
+	    $('html').on('init:client', function () {
+	        Backbone.mediator.publish('init:module-navbar-quicksearch', {
+            	el: '#nav-quicksearch-results',
+	        });
+	    });
+	</script>
+	
+	<div class="nav-section nav-mobile-triple-dots mobile-only">
+		<a class="nav-button" role="button" onclick="$('body').toggleClass('mobile-triple-dots-active');"> 
+    		<i class="fas fa-fw fa-ellipsis-v"></i>
+		</a>
+	</div>
+    
+    <div class="nav-section nav-buttons">
+    	<div class="brand-links mobile-only">
+        	{% include 'cosinnus/v2/navbar/brand_links.html' %}
+        </div>
+            
+		<a class="nav-button" rel="toggle" role="button" title="{% trans "Create content" %}" 
+		    		aria-expanded="false" aria-controls="create-menu-collapse"
+		    		data-toggle="collapse" data-target="#create-menu-collapse"> 
+    		<i class="fas fa-fw fa-plus"></i>
+		</a>
+		{% block home_icon_button %}
+		<a class="nav-button" href="/cms/?noredir=1" role="button" title="{% trans "Home" %}"> 
+    		<i class="fas fa-fw fa-home"></i>
+		</a>
+		{% endblock %}
+		<a class="nav-button" href="{% group_url "cosinnus:event:list" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}" role="button" title="{% trans "Events" %}"> 
+    		<i class="fas fa-fw fa-calendar"></i>
+		</a>
+		{% if request.user.is_authenticated %}
+			<a class="nav-button" href="{% url 'postman:inbox' %}" role="button" title="{% trans "Nachrichten" %}"> 
+	    		<i class="fas fa-fw fa-envelope"></i>
+			</a>
+			<a class="nav-button user-menu-button" rel="toggle" role="button" title="{% trans "Menu" %}" 
+			    		aria-expanded="false" aria-controls="user-menu-collapse"
+			    		data-toggle="collapse" data-target="#user-menu-collapse"> 
+			    {% include "cosinnus/user/user_avatar_image.html" with user=request.user image_size="mini" show_v2_icon_on_missing=True %}
+			</a>
+		{% else %}
+			<a class="nav-button nav-header-textlink" rel="toggle" role="button" title="{% trans "Change language" %}" 
+		    		aria-expanded="false" aria-controls="language-menu-collapse"
+		    		data-toggle="collapse" data-target="#language-menu-collapse"> 
+            	{{ request.LANGUAGE_CODE|upper }}
+            </a>
+            <a class="nav-button nav-header-textlink" href="{% url 'login' %}" title="{% trans "Log in" %}">
+            	{% trans "Log in" %}
+            </a>
+            <a class="nav-button nav-header-textlink mobile-hidden" href="{% url "cosinnus:user-add" %}" title="{% trans "Register a new account" %}">
+            	{% trans "Register" %}
+            </a>
+		{% endif %}
+    </div>
+    
+    {% if request.user.is_authenticated %}
+		<div class="collapse nav-flyout" id="main-collapse">
+			<div class="nav-flyout-section main-menu-flyout " id="nav-main-menu">
+				{% comment %} This is the backbone App 'module-navbar-main-menu! {% endcomment %}
+			</div>
+			<div class="nav-flyout-backdrop"></div>
+		</div>
+		
+		{% comment %} The JSON data passed here is unsafe and passed as a HTML encoded string!  {% endcomment %}
+		<script>
+		    $('html').on('init:client', function () {
+		        Backbone.mediator.publish('init:module-navbar-main-menu', {
+	            	el: '#nav-main-menu',
+	            	contextDataJSON: {
+	            		'group_clusters': "{{ group_clusters_json_encoded }}",
+	            		'groups_invited': "{{ groups_invited_json_encoded }}",
+	            		'group_requests': "{{ group_requests_json_encoded }}",
+	            		'group_requests_count': {{ group_requests_count }},
+	            		'followed_ideas': "{{ followed_ideas_json_encoded }}",
+	            		'my_ideas': "{{ my_ideas_json_encoded }}",
+	            		'attending_events': "{{ attending_events_json_encoded }}",
+	            	},
+	            	contextData: {
+	            		'group_add_url': '{% url 'cosinnus:group__group-add' %}',
+	            		'project_add_url': '{% url 'cosinnus:group-add' %}',
+	            		{% if SETTINGS.COSINNUS_IDEAS_ENABLED %}
+	            		'idea_add_url': '{% url "cosinnus:idea-create" %}',
+	            		{% endif %}
+	            		'event_add_url': '{% group_url "cosinnus:event:event-add" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}',
+	            		'event_calendar_url': '{% group_url "cosinnus:event:list" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}',
+	            	}
+		        });
+		    });
+		</script>
+	{% endif %}		
+	
+	<div class="collapse nav-flyout create-menu" id="create-menu-collapse">
+	
+		<div class="nav-flyout-section flex-row mobile-flex-column">
+			<a href="{% if not user.is_authenticated %}{% url 'cosinnus:user-add' %}?acc_req_msg=1&next={% endif %}{% url 'cosinnus:group-add' %}" 
+					class="create-menu-link flex-grow">
+				<h2 class="headline margin-regular">{% trans "Project" %}</h2>
+				<div class="description">
+					{% trans "Organize your projects or initiatives efficiently with your fellow campaigners. All important tools for collaborating in one place: News, Pads, Events, Todos, and more." %}
+				</div>
+				<div class="action text-bold">
+					{% trans "Create new Project" %} 
+				</div>
+			</a>
+			<a href="{% if not user.is_authenticated %}{% url 'cosinnus:user-add' %}?acc_req_msg=1&next={% endif %}{% url 'cosinnus:group__group-add' %}"
+					class="create-menu-link flex-grow">
+				<h2 class="headline">{% trans "Group" %}</h2>
+				<div class="description">
+					{% trans "Groups help improve communication and collaboration in large networks or organisations. Within a Group you can bring together several smaller projects or workgroups." %}
+				</div>
+				<div class="action text-bold">
+					{% trans "Create new Group" %} 
+				</div>
+			</a>
+			{% if SETTINGS.COSINNUS_IDEAS_ENABLED %}
+			<a href="{% if not user.is_authenticated %}{% url 'cosinnus:user-add' %}?acc_req_msg=1&next={% endif %}{% url "cosinnus:idea-create" %}" 
+					class="create-menu-link flex-grow">
+				<h2 class="headline margin-regular">{% trans "Idea" %}</h2>
+				<div class="description">
+					{% trans "What will our region look like in the future? What is your idea for an environmentally friendly and sustainable region? Find co-campaigners for your project ideas." %}
+				</div>
+				<div class="action text-bold">
+					{% trans "Post new Idea" %} 
+				</div>
+			</a>
+			{% endif %}
+			<a href="{% if not user.is_authenticated %}{% url 'cosinnus:user-add' %}?acc_req_msg=1&next={% endif %}{% group_url "cosinnus:event:event-add" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}" 
+					class="create-menu-link flex-grow">
+				<h2 class="headline margin-regular">{% trans "Event" %}</h2>
+				<div class="description">
+					{% trans "What's happening where and when? What's to discover? Where to meet?" %}
+				</div>
+				<div class="action text-bold">
+					{% trans "Add Event" %} 
+				</div>
+			</a>
+			{% if SETTINGS.COSINNUS_V2_DASHBOARD_SHOW_MARKETPLACE %}
+			<a href="{% if not user.is_authenticated %}{% url 'cosinnus:user-add' %}?acc_req_msg=1&next={% endif %}{% group_url "cosinnus:marketplace:add" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}" 
+					class="create-menu-link flex-grow">
+				<h2 class="headline margin-regular">{% trans "Offer" %}</h2>
+				<div class="description">
+					{% trans "Do you have something to share, sell or give away? Are you searching for something?" %}
+				</div>
+				<div class="action text-bold">
+					{% trans "Post new Offer" %} 
+				</div>
+			</a>
+			{% endif %}
+			
+		</div>
+		<div class="nav-flyout-backdrop"></div>
+	</div>
+	
+	
+	
+	
+	
+	<div class="collapse nav-flyout text-right" id="language-menu-collapse">
+	
+		<div class="nav-flyout-section padded">
+			<h2 class="headline margin-regular">{% trans "Change language" %}</h2>
+			
+			<ul class="item-list">
+				{% for code, language in SETTINGS.LANGUAGES %}
+					<li>
+						<a href="{% url 'cosinnus:switch-language' language=code %}?next={{ request.path }}" 
+								class="list-item {% if request.LANGUAGE_CODE == code %}text-bold{% endif %}" role="button" titledby=".item-text"> 
+				    		<div class="item-text">
+				    			{{ language }}
+				    		</div>
+						</a>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+		<div class="nav-flyout-backdrop"></div>
+	</div>
+	
+	
+	<div class="collapse nav-flyout text-right" id="user-menu-collapse">
+		{% comment %}  
+		<div class="nav-flyout-section padded">
+			<h2 class="headline margin-regular">{% trans "Switch Portal" %} (soll das rein?)</h2>
+			
+			{% include 'cosinnus/v2/navbar/portal_list.html' %}
+		</div>
+		{% endcomment %}
+		
+		<div class="nav-flyout-section padded">
+			<ul class="item-list">
+				<li>
+					<a href="{% url 'cosinnus:profile-detail' %}" class="list-item" role="button" titledby=".item-text"> 
+			    		<div class="item-text">
+			    			{% trans "My Profile" %} 
+			    		</div>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'cosinnus:profile-edit' %}" class="list-item" role="button" titledby=".item-text"> 
+			    		<div class="item-text">
+			    			{% trans "Edit My Profile" %} 
+			    		</div>
+					</a>
+				</li>
+				<li>
+					<a href="{% url 'cosinnus:notifications' %}" class="list-item" role="button" titledby=".item-text"> 
+			    		<div class="item-text">
+			    			{% trans "Notification Preferences" %} 
+			    		</div>
+					</a>
+				</li>
+				<li>
+					<a rel="toggle" class="list-item" role="button" titledby=".item-text" title="{% trans "Change language" %}
+							aria-expanded="false" aria-controls="language-menu-collapse"
+		    				data-toggle="collapse" data-target="#language-menu-collapse"
+		    				onclick="$('#user-menu-collapse').removeClass('in').addClass('collapse');"> 
+			    		<div class="item-text">
+			    			{% trans "Change language" %}
+			    		</div>
+					</a>
+				</li>
+			</ul>
+		</div>
+		
+		<div class="nav-flyout-section padded">
+			<ul class="item-list">
+				<li>
+					<a href="{% url 'logout' %}" class="list-item" role="button" titledby=".item-text"> 
+			    		<div class="item-text">
+			    			{% trans "Logout" %} 
+			    		</div>
+					</a>
+				</li>
+			</ul>
+		</div>
+		<div class="nav-flyout-backdrop"></div>
+	</div>
+	
+    
+</nav>
+

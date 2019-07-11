@@ -1,0 +1,34 @@
+{% load i18n cosinnus_tags %}
+
+
+<div class="timeline-item-comments">
+	{% with ajax_form_id="comment-form-"|add_uuid %}
+	
+		{% with comment_count=comments|length %}
+		 	{% if comment_count > 3 %}
+				<div class="timeline-item-row comments-header text-small plain-links pale-color shown-when-more">
+					{% comment %} onclick functionality is in timeline-view.js {% endcomment %}
+					<a href="#" class="show-all-comments">
+						{% blocktrans with count=comment_count %}Show all {{ count }} comments{% endblocktrans %}
+					</a>
+				</div>
+				<hr class="seperator shown-when-more" />
+			{% endif %}
+			
+			{% for comment in comments %}
+				{% include 'cosinnus/v2/dashboard/timeline_item_comment.html' with object=comment %}
+			{% endfor %}
+			<div data-target="ajax-form-result-anchor-before" data-ajax-form-id="{{ ajax_form_id }}"></div>
+		{% endwith %}
+		
+		<div class="timeline-item-row comment-form flex-row">
+			<div class="">
+				<i class="fas fa-fw fa-pencil-alt"></i>
+			</div>
+			<div class="flex-grow">
+				{% include 'cosinnus/v2/dashboard/timeline_item_comment_form.html' with action_url=item.get_comment_post_url form_id=ajax_form_id %}
+			</div>
+		</div>
+	{% endwith %}
+</div>
+

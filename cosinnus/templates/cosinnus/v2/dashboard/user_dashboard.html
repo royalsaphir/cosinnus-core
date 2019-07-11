@@ -1,0 +1,180 @@
+{% extends "cosinnus/base.html" %}
+{% load i18n thumbnail cosinnus_tags static %}
+
+{% block js_app_dependencies %}
+	{{ block.super }}
+    <script src="{% static 'js/ajax_forms.js' %}"></script>
+{% endblock %}
+
+{% block page_title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block og_url %}{{ block.super }}{% endblock og_url %}
+{% block og_title %}{{ block.super }}{% endblock %}
+{% block og_image %}{{ block.super }}{% endblock %}
+{% block og_description %}{{ block.super }}{% endblock %}
+
+{% block og_meta_attributes %}
+    {{ block.super }}
+{% endblock %}
+
+{% block body_attributes %}class="v2-dashboard-body"{% endblock body_attributes %}
+
+{% block container_classes %}v2-dashboard loading{% endblock container_classes %}
+{% block container_attributes %}data-active-panel="2"{% endblock container_attributes %}
+
+{% block main_page %}
+	{% include 'cosinnus/common/internet_explorer_not_supported.html' %}
+
+    {% comment %} Some settings for the dashboard are initialized in the extraheader, and passed in a router.js, and uses a lot of
+                   the default settings defined in map.js.  
+                  We don't pass a `settings param here because we use all the default ones.`      
+    {% endcomment %}
+    
+    <div class="dashboard-mobile-header mobile-only">
+    	<a class="active-panel-1" onclick="$('.v2-dashboard').attr('data-active-panel', 1);">
+    		{% trans "Overview" %}
+		</a>
+    	<a class="active-panel-2" onclick="$('.v2-dashboard').attr('data-active-panel', 2);">
+    		{% trans "Timeline" %}
+		</a>
+    	<a class="active-panel-3" onclick="$('.v2-dashboard').attr('data-active-panel', 3);">
+    		{% trans "Contents" %}
+		</a>
+    </div>
+        
+	<div class="dashboard-left-bar dashboard-column visible-panel-1">
+		<div class="dashboard-left-bar-content" style="display: none;">
+			<div class="group-widget-root">
+			</div>
+			<div class="ideas-widget-root">
+			</div>
+			<div class="map-widget square-widget">
+					<div class="widget-content square-content">
+						<h2 class="headline">{% trans "Close to me" %}</h2>
+					</div>
+					<a href="/map/" class="square-content hover-link">
+						{% trans "Show large map" %} 
+					</a>
+			</div>
+			<div class="legal-links">
+				{% include 'cosinnus/v2/dashboard/tos_links.html' %}
+			</div>
+		</div>
+	</div>
+		
+	<div class="dashboard-center-bar dashboard-column visible-panel-2">
+		<div class="dashboard-welcome-frame" style="display: none">
+			<div class="aside-link text-small">
+				<a class="pale-color pale-with-highlight hide-welcome-screen"
+					data-target="ui-pref" data-ui-pref="timeline__hide_welcome_screen"
+					data-ui-pref-value="1" data-hide-after=".dashboard-welcome-frame">
+					{% trans "Do not show this again" %}
+				</a>
+			</div>
+			<h1 class="headline headline-big no-side-margin">
+				{% trans "Welcome" context "this is a two-line text that says 'Welcome to <WebsiteName>'" %}
+				<br/>
+				{% blocktrans with portal_name=COSINNUS_CURRENT_PORTAL.name context "this is a two-line text that says 'Welcome to <WebsiteName>'"  %}to {{ portal_name }}{% endblocktrans %}
+			</h1>
+			<div class="description margin-extra-large">
+				{% block welcome_frame_text %}
+					{% blocktrans with portal_name=COSINNUS_CURRENT_PORTAL.name %}Good to see you! At {{ portal_name }} you can collaborate with others in Projects and Groups. Whether Initiative, Organisation, or Network - {{ portal_name }} offers all the necessary tools for your online collaboration.{% endblocktrans %}
+				{% endblock %}
+			</div>
+			<div class="flex-row mobile-flex-column">
+				<div class="flex-grow margin-extra-large">
+					<h2 class="headline no-side-margin">{% trans "Projects" %}</h2>
+					<div class="description">
+						{% trans "Organize your projects or initiatives efficiently with your fellow campaigners. All important tools for collaborating in one place: News, Pads, Events, Todos, and more." %}
+					</div>
+					<br/>
+					<a href="{% url 'cosinnus:group-add' %}" class="pale-color pale-with-highlight">
+						{% trans "Create new Project" %} 
+					</a>
+				</div>
+				<div class="flex-grow margin-extra-large">
+					<h2 class="headline no-side-margin">{% trans "Groups" %}</h2>
+					<div class="description">
+						{% trans "Groups help improve communication and collaboration in large networks or organisations. Within a Group you can bring together several smaller projects or workgroups." %}
+					</div>
+					<br/>
+					<a href="{% url 'cosinnus:group__group-add' %}" class="pale-color pale-with-highlight">
+						{% trans "Create new Group" %} 
+					</a>
+				</div>
+			</div>
+			<div class="flex-row mobile-flex-column">
+				{% if SETTINGS.COSINNUS_IDEAS_ENABLED %}
+				<div class="flex-grow margin-extra-large">
+					<h2 class="headline no-side-margin">{% trans "Ideas" %}</h2>
+					<div class="description">
+						{% trans "What will our region look like in the future? What is your idea for an environmentally friendly and sustainable region? Find co-campaigners for your project ideas." %}
+					</div>
+					<br/>
+					<a href="{% url "cosinnus:idea-create" %}" class="pale-color pale-with-highlight">
+						{% trans "Post new Idea" %} 
+					</a>
+				</div>
+				{% endif %}
+				<div class="flex-grow margin-extra-large">
+					<h2 class="headline no-side-margin">{% trans "Events" %}</h2>
+					<div class="description">
+						{% trans "What's happening where and when? What's to discover? Where to meet?" %}
+					</div>
+					<br/>
+					<a href="{% group_url "cosinnus:event:event-add" group=SETTINGS.NEWW_EVENTS_GROUP_SLUG %}" class="pale-color pale-with-highlight">
+						{% trans "Add Event" %} 
+					</a>
+				</div>
+				
+			</div>
+		</div>
+		
+		<div class="dashboard-news-create-frame">
+			<h2 class="headline mobile-hidden">{% trans "News" %}</h2>
+			
+			<div class="news-textbox-frame">
+				<div class="news-textbox" data-toggle="modal" data-target="#write-news-modal">
+					<span class="news-textbox-icon">
+						<i class="fas fa-fw fa-pencil-alt"></i>
+					</span>
+					{% trans "What's the latest news?" %}
+				</div>
+			</div>
+			{% include 'cosinnus_note/v2/note_form_modal.html' with group=forum_group form=note_form %}
+		</div>
+		
+		<div class="timeline-root">
+			{# timeline-view.js #}
+		</div>
+		
+	</div>
+		
+	<div class="dashboard-right-bar dashboard-column visible-panel-3">
+		<div class="dashboard-right-bar-content" style="display: none;">
+			<div class="typed-widgets-root">
+			</div>
+			
+			<div class="widget-info-box welcome_widget_box no-header no-select" style="display: none;">
+				<div class="margin-large">
+					{% trans "Your recently visited Pads, Files, Events, Todos and other content will be shown here." %}
+				</div>
+				<div class="text-small">
+					<a class="pale-color pale-with-highlight" data-target="ui-pref" data-ui-pref="timeline__hide_welcome_widget_box" data-ui-pref-value="1" data-hide-after=".welcome_widget_box">
+						{% trans "Do not show this again" %}
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+		
+	
+    
+    <script>
+	    $('html').on('init:client', function () {
+	        console.log('got init client, now init:module-full-routed');
+	        Backbone.mediator.publish('init:module-user-dashboard', {{ user_dashboard_options_json|safe }});
+	    });
+	</script>
+
+{% endblock main_page %}

@@ -1,0 +1,82 @@
+{% import "include/macros.html" as macros %}
+
+<div class="widget-content" {% block attrs %}{% endblock %}>
+	{% block widget_dropdown %}
+		{% if isMovable or isHidable %}
+			<div class="widget-dropdown v2-dropdown dropdown">
+		    	<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+		            <i class="fas fa-ellipsis-h"></i>
+		        </a>
+		        <ul class="dropdown-menu">
+					<li>
+						<a class="sort-up">
+		                	{# Translators: __INCLUDE_JS_PO__ #}
+							{% trans "Move up" %}
+						</a>
+					</li>
+					<li>
+						<a class="sort-down">
+		                	{# Translators: __INCLUDE_JS_PO__ #}
+							{% trans "Move down" %}
+						</a>
+					</li>
+		        </ul>
+			</div>
+		{% endif %}
+	{% endblock %}
+	
+	<h2 class="headline">
+		{% block title %}{% endblock %}
+	</h2>
+	
+	{% if hadErrors %}
+		<ul class="item-list">
+			<li>
+				<span class="list-item list-item-link list-item-center no-select" href="#" role="button" titledby=".item-text"> 
+		    		<div class="item-text">
+		                {# Translators: __INCLUDE_JS_PO__ #}
+						{% trans "There was an error loading the widget" %}
+		    		</div>
+				</span>
+			</li>
+		</ul>
+	{% else %}
+	
+		{% block content %}
+			{% if items|length > 0 %}
+				<ul class="item-list">
+					{% for item in items %}
+						{{ macros.listItem(item.text, item.url, item.icon, item.subtext, is_emphasized=item.is_emphasized) }}
+					{% endfor %}
+					{% if loadMoreEnabled and hasMore %}
+						<li>
+							<a class="list-item list-item-link show-more" role="button" titledby=".item-text"> 
+								<div class="item-icon item-icon-offset">
+					    			<i class="fas fa-fw"></i>
+					    		</div>
+								<div class="item-text">
+					                {# Translators: __INCLUDE_JS_PO__ #}
+									{% trans "Show more" %}
+								</div>
+							<a>
+						</li>
+					{% endif %}
+				</ul>
+			{% else %}
+				{% block empty_content %}
+					<li>
+						<span class="list-item list-item-link list-item-center no-select" href="#" role="button" titledby=".item-text"> 
+				    		<div class="item-text">
+				                {% block empty_message %}
+					                {# Translators: __INCLUDE_JS_PO__ #}
+									{% trans "There are no items yet" %}
+								{% endblock %}
+				    		</div>
+						</span>
+					</li>
+				{% endblock %}
+			{% endif %}
+		{% endblock %}
+		
+	{% endif %}
+</div>

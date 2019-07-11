@@ -20,6 +20,9 @@ from cosinnus.core import signals as cosinnus_signals
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.http import is_safe_url
+from django.contrib.redirects.middleware import RedirectFallbackMiddleware
+from cosinnus.utils.urls import redirect_next_or
 
 
 logger = logging.getLogger('cosinnus')
@@ -89,6 +92,28 @@ class StartupMiddleware(MiddlewareMixin):
             initialize_cosinnus_after_startup()
            
         raise MiddlewareNotUsed
+
+
+class AdminOnlyOTPMiddleware(MiddlewareMixin):
+    """
+        If setting `COSINNUS_ADMIN_2_FACTOR_AUTH_ENABLED` is True, this middleware 
+        will restrict all access to the django admin area to accounts with a django-otp
+        2-factor authentication device set up, by redirecting the otp validation view.
+        Set up at least one device at <host>/admin/otp_totp/totpdevice/ before activating this!
+    """
+    def process_request(self, request):
+        if not getattr(settings, 'COSINNUS_ADMIN_2_FACTOR_AUTH_ENABLED', False):
+            return None
+        
+        user = getattr(request, 'user', None)
+        # on all "real" admin urls
+        if user and (user.is_staff or user.is_superuser) and request.path.startswith('/admin/') and not request.path in ['/admin/login/', '/admin/logout/']:
+            # check if the user is not yet 2fa verified, if so send him to the verification view
+            if not user.is_verified():
+                next_url = request.path
+                return redirect(reverse('cosinnus:login-2fa') + (('?next=%s' % next_url) if is_safe_url(next_url, allowed_hosts=[request.get_host()]) else ''))
+
+        return None
 
 
 """Adds the request to the instance of a Model that is being saved (created or modified)
@@ -192,7 +217,7 @@ class ConditionalRedirectMiddleware(MiddlewareMixin):
         if request.user.is_authenticated:
             # hiding login and signup pages for logged in users
             if request.path in ['/login/', '/signup/']:
-                redirect_url = getattr(settings, 'COSINNUS_LOGGED_IN_USERS_LOGIN_PAGE_REDIRECT_TARGET', None)
+                redirect_url = redirect_next_or(request, getattr(settings, 'COSINNUS_LOGGED_IN_USERS_LOGIN_PAGE_REDIRECT_TARGET', None))
                 if redirect_url:
                     return HttpResponseRedirect(redirect_url)
             
@@ -207,3 +232,11 @@ class ConditionalRedirectMiddleware(MiddlewareMixin):
                     if settings_redirect[1]:
                         messages.success(request, _(settings_redirect[1]))
                     return HttpResponseRedirect(settings_redirect[0])
+                
+                
+class MovedTemporarilyRedirectFallbackMiddleware(RedirectFallbackMiddleware):
+    """ The default django redirect middleware, but using 302 Temporary instead
+        of 301 Permanent redirects. """
+    
+    response_redirect_class = HttpResponseRedirect
+    

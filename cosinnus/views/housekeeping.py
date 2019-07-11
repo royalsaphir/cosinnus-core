@@ -34,6 +34,9 @@ from cosinnus.core.mail import send_mail_or_fail, send_mail,\
     send_mail_or_fail_threaded
 from django.template.defaultfilters import linebreaksbr
 from django.db.models.aggregates import Count
+from cosinnus.utils.http import make_csv_response
+from operator import itemgetter
+from dateutil import parser
 
 
 def housekeeping(request=None):
@@ -374,6 +377,13 @@ def print_settings(request):
         setts += '%s = %s<br/>' % (key, val)
     return HttpResponse('Settings are:<br/>' + setts)
 
+def _get_group_storage_space_mb(group):
+    size = 0
+    for f in group.cosinnus_file_fileentry_set.all():
+        if f.file:
+            size += f.file.size
+    size = size * 0.00000095367431640625  # in Mb
+    return size
 
 def group_storage_info(request):
     if request and not request.user.is_superuser:
@@ -381,17 +391,53 @@ def group_storage_info(request):
     
     prints = '<h1>All groups and projects with file storage usage over 10MB:</h1><br/>'
     for group in CosinnusGroup.objects.all():
-        size = 0
-        for f in group.cosinnus_file_fileentry_set.all():
-            if f.file:
-                size += f.file.size
-        size = size * 0.00000095367431640625  # in Mb
+        size = _get_group_storage_space_mb(group)
         if size > 10:
             prints += '- %s (%s): %i MB<br/>' % (group.name, group.slug, size)
 
     return HttpResponse(prints)
 
 
+def group_storage_report_csv(request):
+    """
+        Will return a CSV containing infos about all Group:s
+            URL, Member-count, Number-of-Projects, Storage-Size-in-MB, Storage-Size-of-Group-and-all-Child-Projects-in-MB
+    """
+    if request and not request.user.is_superuser:
+        return HttpResponseForbidden('Not authenticated')
+    
+    rows = []
+    headers = ['url', 'member-count', 'number-projects', 'group-storage-mb', 'group-and-projects-sum-mb']
+    
+    for group in CosinnusSociety.objects.all_in_portal():
+        projects = group.get_children()
+        group_size = _get_group_storage_space_mb(group)
+        projects_size = 0
+        for project in projects:
+            projects_size += _get_group_storage_space_mb(project)
+        rows.append([group.get_absolute_url(), group.member_count, len(projects), group_size, group_size + projects_size])
+    rows = sorted(rows, key=itemgetter(4), reverse=True)
+    return make_csv_response(rows, headers, 'group-storage-report')
+
+
+def project_storage_report_csv(request):
+    """
+        Will return a CSV containing infos about all Projects:
+            URL, Member-count, Storage-Size-in-MB
+    """
+    if request and not request.user.is_superuser:
+        return HttpResponseForbidden('Not authenticated')
+    
+    rows = []
+    headers = ['url', 'member-count', 'project-storage-mb',]
+    
+    for project in CosinnusProject.objects.all_in_portal():
+        project_size = _get_group_storage_space_mb(project)
+        rows.append([project.get_absolute_url(), project.member_count, project_size])
+    rows = sorted(rows, key=itemgetter(2), reverse=True)
+    return make_csv_response(rows, headers, 'project-storage-report')
+
+    
 def user_activity_info(request):
     if request and not request.user.is_superuser:
         return HttpResponseForbidden('Not authenticated')
@@ -407,9 +453,10 @@ def user_activity_info(request):
 #     for user in get_user_model().objects.filter(is_active=True).exclude(last_login__exact=None).\
 #                 annotate(group_projects=group_projects).annotate(group_projects_admin=group_projects_admin).\
 #                 annotate(projects_only=projects_only).annotate(groups_only=groups_only):
-    
+    portal = CosinnusPortal.get_current()
     for membership in CosinnusGroupMembership.objects.filter(group__portal=CosinnusPortal.get_current(), user__is_active=True).exclude(user__last_login__exact=None):
-        user_row = users.get(membership.user.id, [0, 0, 0, 0, (now()-membership.user.last_login).days])
+        user = membership.user
+        user_row = users.get(user.id, [0, 0, 0, 0, (now()-user.last_login).days, 1])
         user_row[0] += 1
         if membership.group.type == CosinnusGroup().TYPE_PROJECT:
             user_row[1] +=1 
@@ -417,12 +464,17 @@ def user_activity_info(request):
             user_row[2] +=1 
         if membership.status == MEMBERSHIP_ADMIN:
             user_row[3] += 1
+        tos_accepted_date = user.cosinnus_profile.settings.get('tos_accepted_date', None)
+        if portal.tos_date.year > 2000 and (tos_accepted_date is None or parser.parse(tos_accepted_date) < portal.tos_date):
+            user_row[5] = 0
+        
         users[membership.user.id] = user_row
     
     rows = users.values()
     rows = sorted(rows, key=lambda row: row[0], reverse=True)
-    rows = [('projects-and-groups-count', 'groups-only-count', 'projects-only-count', 'admin-of-projects-and-groups-count', 'user-last-login-days'), ] + rows
-    prints += '<br/>'.join([','.join((str(cell) for cell in row)) for row in rows])
-    
-    return HttpResponse(prints)
+    headers = ['projects-and-groups-count', 'groups-only-count', 'projects-only-count', 'admin-of-projects-and-groups-count', 'user-last-login-days', 'current-tos-accepted']
+
+    #prints += '<br/>'.join([','.join((str(cell) for cell in row)) for row in rows])
+    #return HttpResponse(prints)
+    return make_csv_response(rows, headers, 'user-activity-report')
 

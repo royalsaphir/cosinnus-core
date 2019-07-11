@@ -83,8 +83,13 @@ STATICFILES_FINDERS = (
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'cosinnus.core.middleware.cosinnus_middleware.MovedTemporarilyRedirectFallbackMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
+    'cosinnus.core.middleware.cosinnus_middleware.AdminOnlyOTPMiddleware',
+    
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     
@@ -123,6 +128,8 @@ TEMPLATES = [
                 'postman.context_processors.inbox',
                 'cosinnus.utils.context_processors.settings',
                 'cosinnus.utils.context_processors.cosinnus',
+                'cosinnus.utils.context_processors.tos_check',
+                'announcements.context_processors.add_custom_announcements',
              ),
             'loaders': (
                 'django.template.loaders.filesystem.Loader',
@@ -147,6 +154,7 @@ def compile_installed_apps(internal_apps=[]):
         'django.contrib.contenttypes',
         'django.contrib.humanize',
         'django.contrib.messages',
+        'django.contrib.redirects',
         'django.contrib.sessions',
         'django.contrib.sites',
         'django.contrib.staticfiles',
@@ -191,12 +199,16 @@ def compile_installed_apps(internal_apps=[]):
         'cosinnus_poll',
         'cosinnus_stream',
         'cosinnus_todo',
+        'announcements',
+        'ajax_forms',
         
         # 'django_extensions',
         'django_filters',
         'django_select2',
         'django_cron',
         'widget_tweaks',
+        'django_otp',
+        'django_otp.plugins.otp_totp',
         
         # External Apps
         'awesome_avatar',
@@ -465,8 +477,15 @@ NEWW_DEFAULT_USER_AUTH_GROUPS = ['Users']
 # new user that register will automatically become members of these groups/projects (supply group slugs!)
 NEWW_DEFAULT_USER_GROUPS = ['forum']
 
+# these groups will accept members instantly after requesting membership
+COSINNUS_AUTO_ACCEPT_MEMBERSHIP_GROUP_SLUGS = ['forum']
+
 # the "Home" group for this portal. if not set, some things won't work (like attaching files to direct messages)
 NEWW_FORUM_GROUP_SLUG = 'forum'
+
+# the resident "Events" group for this portal. set this to thhe `NEWW_FORUM_GROUP_SLUG` if there isn't a seperate group!
+NEWW_EVENTS_GROUP_SLUG = NEWW_FORUM_GROUP_SLUG
+
 
 # if enabled, group admins will see a "rearrange" button and can re-order the widgets.
 # pretty wonky and unintuitive right now, so be careful!
@@ -509,3 +528,11 @@ SWAGGER_SETTINGS = {
         'title': 'WECHANGE API',
     },
 }
+
+SUIT_CONFIG = {
+    'ADMIN_NAME': 'Wechange Admin'
+}
+
+# 2-factor authentication issuer name for admin backend
+OTP_TOTP_ISSUER = 'WECHANGE eG'
+

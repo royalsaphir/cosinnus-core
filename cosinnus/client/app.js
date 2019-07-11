@@ -10,6 +10,9 @@ var ControlView = require('views/control-view');
 var MapView = require('views/map-view');
 var TileListView = require('views/tile-list-view');
 var TileDetailView = require('views/tile-detail-view');
+var NavbarQuickSearchView = require('views/navbar/quicksearch-view');
+var NavbarMainMenuView = require('views/navbar/main-menu-view');
+var UserDashboardView = require('views/userdashboard/userdashboard-view');
 
 
 var App = function App () {
@@ -25,6 +28,11 @@ var App = function App () {
     self.tileListView = null;
     self.mapView = null;
     self.tileDetailView = null;
+    
+    // other views
+    self.navbarQuickSearchView = null;
+    self.navbarMainMenuView = null;
+    self.userDashboardView = null;
 
     self.router = null;
     self.mediator = null;
@@ -47,7 +55,8 @@ var App = function App () {
         showTiles: true,
         showControls: true,
         fullscreen: true,
-        routeNavigation: true
+        routeNavigation: true,
+        forcePaginationControlsEnabled: false
     };
     self.displayOptions = {}
     self.defaultEl = '#app-fullscreen';
@@ -78,6 +87,9 @@ var App = function App () {
         // one of these need to be called from the template to initialize the required modules
         Backbone.mediator.subscribe('init:module-full-routed', self.initModuleFullRouted, self);
         Backbone.mediator.subscribe('init:module-embed', self.initAppFromOptions, self);
+        Backbone.mediator.subscribe('init:module-navbar-quicksearch', self.initNavbarQuicksearchFromOptions, self);
+        Backbone.mediator.subscribe('init:module-navbar-main-menu', self.initNavbarMainMenuFromOptions, self);
+        Backbone.mediator.subscribe('init:module-user-dashboard', self.initUserDashboardFromOptions, self);
         
         // - the 'init:client' signal is the marker for all pages using this client.js to now
         //      publish the "init:<module>" event for whichever module configuration they wish to load (see above)
@@ -157,12 +169,14 @@ var App = function App () {
                 portalInfo: portalInfo,
                 controlsEnabled: self.displayOptions.showControls,
                 scrollControlsEnabled: self.displayOptions.showControls && self.displayOptions.showMap,
-                paginationControlsEnabled: self.displayOptions.showTiles,
+                paginationControlsEnabled: self.displayOptions.forcePaginationControlsEnabled || self.displayOptions.showTiles,
+                paginationControlsUseInfiniteScroll: !self.displayOptions.showMap && self.displayOptions.showTiles,
                 filterGroup: self.settings.filterGroup,
                 basePageURL: basePageUrl,
                 showMine: self.settings.showMine,
                 fullscreen: self.displayOptions.fullscreen,
-                splitscreen: self.displayOptions.showMap && self.displayOptions.showTiles
+                splitscreen: self.displayOptions.showMap && self.displayOptions.showTiles,
+                searchResultLimit: self.settings.searchResultLimit || 20,
             }, 
             self, 
             null
@@ -197,7 +211,8 @@ var App = function App () {
     			var options = {
     				elParent: self.el,
     				fullscreen: self.displayOptions.fullscreen,
-    				splitscreen: self.displayOptions.showMap && self.displayOptions.showTiles
+    				splitscreen: self.displayOptions.showMap && self.displayOptions.showTiles,
+                    controlsEnabled: self.displayOptions.showControls,
     			};
     			if (self.settings.map && self.settings.map.location) {
     				options['location'] = self.settings.map.location;
@@ -262,6 +277,71 @@ var App = function App () {
         	}
         }
     };
+    
+
+    self.initNavbarQuicksearchFromOptions = function (options) {
+        // add passed options into params extended over the default options
+    	var el = options.el ? options.el : '#nav-quicksearch';
+        var topicsJson = typeof COSINNUS_MAP_TOPICS_JSON !== 'undefined' ? COSINNUS_MAP_TOPICS_JSON : {};
+        var portalInfo = typeof COSINNUS_PORTAL_INFOS !== 'undefined' ? COSINNUS_PORTAL_INFOS : {};
+        
+        if (self.navbarQuickSearchView == null) {
+        	self.navbarQuickSearchView = new NavbarQuickSearchView({
+        		model: null,
+        		el: el,
+        		topicsJson: topicsJson,
+        		portalInfo: portalInfo,
+        	}, 
+        	self
+        	).render();
+        	Backbone.mediator.publish('navbar-quicksearch:ready');
+        }
+    };
+    
+    
+    self.initNavbarMainMenuFromOptions = function (options) {
+        // add passed options into params extended over the default options
+    	var el = options.el ? options.el : '#nav-main-menu';
+        var topicsJson = typeof COSINNUS_MAP_TOPICS_JSON !== 'undefined' ? COSINNUS_MAP_TOPICS_JSON : {};
+        var portalInfo = typeof COSINNUS_PORTAL_INFOS !== 'undefined' ? COSINNUS_PORTAL_INFOS : {};
+        var contextData = options.contextData ? options.contextData : {};
+        var contextDataJSON = options.contextDataJSON ? options.contextDataJSON : {};
+        
+        if (self.navbarMainMenuView == null) {
+        	self.navbarMainMenuView = new NavbarMainMenuView({
+        		model: null,
+        		el: el,
+        		contextData: contextData,
+        		contextDataJSON: contextDataJSON,
+        		topicsJson: topicsJson,
+        		portalInfo: portalInfo,
+        	}, 
+        	self
+        	).render();
+        	Backbone.mediator.publish('navbar-main-manu:ready');
+        }
+    };
+
+    self.initUserDashboardFromOptions = function (options) {
+        // add passed options into params extended over the default options
+        var topicsJson = typeof COSINNUS_MAP_TOPICS_JSON !== 'undefined' ? COSINNUS_MAP_TOPICS_JSON : {};
+        var portalInfo = typeof COSINNUS_PORTAL_INFOS !== 'undefined' ? COSINNUS_PORTAL_INFOS : {};
+        
+        if (self.userDashboardView == null) {
+        	self.userDashboardView = new UserDashboardView({
+        		model: null,
+        		el: null,
+        		topicsJson: topicsJson,
+        		portalInfo: portalInfo,
+        		uiPrefs: options.ui_prefs,
+        	}, 
+        	self
+        	).render();
+        	Backbone.mediator.publish('user-dashboard:ready');
+        }
+    };
+    
+    
     
 };
 

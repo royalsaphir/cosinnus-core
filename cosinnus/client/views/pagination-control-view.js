@@ -21,13 +21,16 @@ module.exports = BaseView.extend({
     
     template: paginationControlsTemplate,
     
+    defaults: {
+    	infiniteScrollHasTriggered: false,
+    },
+    
     // The DOM events specific to an item.
     events: {
         'click .toggle-search-on-scroll': 'toggleSearchOnScrollClicked',
         'click .stale-search-button': 'staleSearchButtonClicked',
         'click .trigger-pagination-forward': 'paginationForwardClicked',
         'click .trigger-pagination-backward': 'paginationBackClicked',
-        'click .onoffswitch-text-label': 'onOffSwitchLabelClicked',
         'click .trigger-create-idea': 'createIdeaClicked',
     },
     
@@ -36,6 +39,10 @@ module.exports = BaseView.extend({
         BaseView.prototype.initialize.call(self, options);
         self.App = app;
         self.controlView = controlView;
+        
+        if (self.controlView.options.paginationControlsUseInfiniteScroll) {
+        	Backbone.mediator.subscribe('tile-list:scroll-end-reached', self.handleInfiniteScrollTriggered, self);
+        }
     },
     
     /** Extend the template data by the controlView's options and state */
@@ -55,13 +62,23 @@ module.exports = BaseView.extend({
         return data;
     },
     
-    // Events  -------------
-
-    /** Trigger for state button elements */
-    onOffSwitchLabelClicked: function (event) {
-        $(event.target).next().find('input[type="checkbox"]').click()
+    afterRender: function () {
+    	// reset infinite scroll lock
+        var self = this;
+        self.state.infiniteScrollHasTriggered = false;
     },
     
+    // Events  -------------
+    
+    /** Called when the end of the scroll list is reached.
+     * 	Can be called multiple times, and even when the full list is already loaded. */
+    handleInfiniteScrollTriggered: function (event) {
+    	if (!this.controlView.state.searching && !this.state.infiniteScrollHasTriggered) {
+    		this.state.infiniteScrollHasTriggered = true;
+    		this.paginationForwardClicked();
+    	}
+    },
+
     // delegate to controlView
     toggleSearchOnScrollClicked: function (event) {
         this.controlView.toggleSearchOnScrollClicked(event);

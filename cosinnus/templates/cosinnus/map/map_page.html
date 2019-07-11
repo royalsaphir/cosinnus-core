@@ -1,5 +1,5 @@
 {% extends "cosinnus/base.html" %}
-{% load i18n thumbnail cosinnus_tags %}
+{% load i18n thumbnail cosinnus_tags static %}
 
 {% block html_attributes %}style="overflow: hidden;"{% endblock html_attributes %}
 
@@ -21,10 +21,13 @@
     {% endif %}
 {% endblock %}
 
-{% block extrahead %}
-    {{ block.super }}
+{% block js_app_dependencies %}
 	{% include 'cosinnus/map/static_dependencies.html' %}
-{% endblock extrahead %}
+	
+	{% if SETTINGS.COSINNUS_USE_V2_NAVBAR or SETTINGS.COSINNUS_USE_V2_NAVBAR_ADMIN_ONLY and user.is_superuser %}
+        <link href="{% static 'css/v2_map_corrections.css' %}" rel="stylesheet">
+	{% endif %}
+{% endblock js_app_dependencies %}
 
 
 {% block main_page %}

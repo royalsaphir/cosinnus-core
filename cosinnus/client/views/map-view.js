@@ -74,6 +74,9 @@ module.exports = ContentControlView.extend({
         // the resulting area is actually sent as coords to the search API 
         latLngBuffer: 0.01,
         
+        // the amount of decimals to round all coordinates to
+        latLngRoundToDecimals: 5,
+        
         resultMarkerSizes: {
             width: 14,
             height: 14,
@@ -507,11 +510,11 @@ module.exports = ContentControlView.extend({
                     // style see https://leafletjs.com/reference-1.3.0.html#path-option
                     var district_boundary = new L.geoJson(null, {
                         style: function (feature) {
-                            return {
+                            return util.ifundef(COSINNUS_MAP_OPTIONS.geojson_style, {
                                 width: 1,
                                 weight: 0.5,
                                 fillOpacity: 0.035,
-                            };
+                            });
                         }
                     });
                     district_boundary.addTo(self.leaflet);
@@ -577,14 +580,14 @@ module.exports = ContentControlView.extend({
         var bounds = this.leaflet.getBounds()
         var paddedBounds = bounds.pad(this.options.latLngBuffer);
         _.extend(this.state, {
-            south: bounds.getSouth(),
-            paddedSouth: paddedBounds.getSouth(),
-            west: bounds.getWest(),
-            paddedWest: paddedBounds.getWest(),
-            north: bounds.getNorth(),
-            paddedNorth: paddedBounds.getNorth(),
-            east: bounds.getEast(),
-            paddedEast: paddedBounds.getEast()
+            south: L.Util.formatNum(bounds.getSouth(), this.options.latLngRoundToDecimals),
+            paddedSouth: L.Util.formatNum(paddedBounds.getSouth(), this.options.latLngRoundToDecimals),
+            west: L.Util.formatNum(bounds.getWest(), this.options.latLngRoundToDecimals),
+            paddedWest: L.Util.formatNum(paddedBounds.getWest(), this.options.latLngRoundToDecimals),
+            north: L.Util.formatNum(bounds.getNorth(), this.options.latLngRoundToDecimals),
+            paddedNorth: L.Util.formatNum(paddedBounds.getNorth(), this.options.latLngRoundToDecimals),
+            east: L.Util.formatNum(bounds.getEast(), this.options.latLngRoundToDecimals),
+            paddedEast: L.Util.formatNum(paddedBounds.getEast(), this.options.latLngRoundToDecimals)
         });
         this.state.zoom = this.leaflet._zoom;
     },

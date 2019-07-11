@@ -1,6 +1,6 @@
 {% load i18n %}
 
-{% if paginationControlsEnabled %}
+{% if paginationControlsEnabled and not paginationControlsUseInfiniteScroll %}
     <div class="map-pagination-controls mobile-view mobile-view-list-visible-block">
         <div class="line">
             {% if page %}
@@ -52,7 +52,7 @@
 {# scroll controls are no longer shown and always on search-when-scrolling #}
 {% if 0 and scrollControlsEnabled %}
     <div class="map-scroll-controls mobile-hidden">
-        <table>
+        <table class="onoffswitch-frame">
             <tr>
                 <td class="onoffswitch-text-label">
                     {# Translators: __INCLUDE_JS_PO__ #}

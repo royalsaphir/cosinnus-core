@@ -34,7 +34,9 @@ from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 from django.utils.http import urlencode
 from django.core.validators import validate_comma_separated_integer_list
-
+from django.contrib.postgres.fields.jsonb import JSONField
+from annoying.functions import get_object_or_None
+from django.contrib.auth import get_user_model
 
 
 
@@ -264,8 +266,70 @@ class AttachableObjectModel(models.Model):
             Usuable to compare equality of attached files to objects. """
         return tuple(sorted(list(self.attached_objects.all().values_list('id', flat=True))))
 
+
 @python_2_unicode_compatible
-class BaseTaggableObjectModel(IndexingUtilsMixin, AttachableObjectModel):
+class LastVisitedObject(models.Model):
+    """
+    A generic object to serve as a datastore for an object a user has visited recently.
+    """
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    target_object = GenericForeignKey('content_type', 'object_id')
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        null=True,
+        related_name='lastvisited')
+    portal = models.ForeignKey('cosinnus.CosinnusPortal', verbose_name=_('Portal'), related_name='visits', 
+        null=False, blank=False, default=1, on_delete=models.CASCADE) # port_id 1 is created in a datamigration!
+    
+    visited = models.DateTimeField(
+        verbose_name=_('Visited'),
+        auto_now_add=True)
+    
+    item_data = JSONField(
+        'Data',
+        help_text='Stores a JSON representation of the target object, as converted by a `DashboardItem`.')
+
+    class Meta(object):
+        app_label = 'cosinnus'
+        ordering = ('visited',)
+        unique_together = (('content_type', 'object_id', 'user'),)
+        verbose_name = _('LastVisited')
+        verbose_name_plural = _('LastVisiteds')
+
+    def __str__(self):
+        return '<LastVisited: %s::%s::%s>' % (self.content_type, self.object_id, self.user.username)
+
+    
+class LastVisitedMixin(object):
+    """ Mixin for models that can be marked as last-visited """
+    
+    def mark_visited(self, user):
+        """ Creates or updates a `LastVisited` object for this object and the given user """
+        if not user.is_authenticated:
+            return now
+        
+        from cosinnus.models.user_dashboard import DashboardItem
+        from cosinnus.models.group import CosinnusPortal
+        ct = self.get_content_type_for_last_visited()
+        visit = get_object_or_None(LastVisitedObject, content_type=ct, object_id=self.id, user=user, portal=CosinnusPortal.get_current())
+        if visit is None:
+            visit = LastVisitedObject(content_type=ct, object_id=self.id, user=user, portal=CosinnusPortal.get_current())
+        
+        visit.visited = now()
+        visit.item_data = DashboardItem(self)
+        visit.save()
+        return visit
+    
+    def get_content_type_for_last_visited(self):
+        return ContentType.objects.get_for_model(self)
+
+
+@python_2_unicode_compatible
+class BaseTaggableObjectModel(LastVisitedMixin, IndexingUtilsMixin, AttachableObjectModel):
     """
     Represents the base for all cosinnus main models. Each inheriting model
     has a set of simple ``tags`` which are just strings. Additionally each
@@ -295,6 +359,19 @@ class BaseTaggableObjectModel(IndexingUtilsMixin, AttachableObjectModel):
         verbose_name=_('Last modified'),
         editable=False,
         auto_now=True)
+    
+    last_action = models.DateTimeField(
+        verbose_name='Last action date',
+        auto_now_add=True,
+        help_text='A datetime for when a significant action last happened for this object, '\
+            'which users might be interested in. I.e. new comments, special edits, etc.')
+    last_action_user = models.ForeignKey(settings.AUTH_USER_MODEL,
+        verbose_name='Last action user',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='+',
+        help_text='The user which caused the last significant action to update the `last_action` datetime.')
+
 
     class Meta(object):
         abstract = True
@@ -313,7 +390,14 @@ class BaseTaggableObjectModel(IndexingUtilsMixin, AttachableObjectModel):
         self.title = clean_single_line_text(self.title)
         if hasattr(self, '_media_tag_cache'):
             del self._media_tag_cache
+        # set last action timestamp
+        if not self.last_action:
+            self.last_action = self.created
+        if not self.last_action_user:
+            self.last_action_user = self.creator
+            
         super(BaseTaggableObjectModel, self).save(*args, **kwargs)
+        
         if not getattr(self, 'media_tag', None):
             self.media_tag = get_tag_object_model().objects.create()
             self.save()
@@ -386,7 +470,16 @@ class BaseTaggableObjectModel(IndexingUtilsMixin, AttachableObjectModel):
                                              {'tag_object': tag_object, 'domain': CosinnusPortal.get_current().get_domain()})
             content_snippets.append(mark_safe(location_html))
         return content_snippets
-
+    
+    def update_last_action(self, last_action_dt, last_action_user=None, save=True):
+        """ Sets the `last_action` timestamp which is used for sorting items for
+            timely relevance to show the users in their timelines or similar. """
+        self.last_action = last_action_dt
+        if last_action_user:
+            self.last_action_user = last_action_user
+        if save:
+            self.save()
+        
 
 class BaseHierarchicalTaggableObjectModel(BaseTaggableObjectModel):
     """
@@ -562,6 +655,9 @@ class LikeableObjectMixin(models.Model):
             self._liked_obj_ids = user_ids
         return user_ids
     
+    def get_liked_users(self):
+        return get_user_model().objects.filter(id__in=self.get_liked_user_ids(), is_active=True)
+    
     def get_followed_user_ids(self):
         """ Returns a list of int user ids for users that are following this object. """
         if self._followed_obj_ids is not None:
@@ -572,6 +668,9 @@ class LikeableObjectMixin(models.Model):
             cache.set(self._FOLLOWED_OBJECT_USER_IDS_CACHE_KEY % (self._get_likeable_model_name(), self.id), user_ids, settings.COSINNUS_LIKEFOLLOW_COUNT_CACHE_TIMEOUT)
             self._followed_obj_ids = user_ids
         return user_ids
+    
+    def get_followed_users(self):
+        return get_user_model().objects.filter(id__in=self.get_followed_user_ids(), is_active=True)
     
     def clear_likes_cache(self):
         """ Clears the remote and local object cache for this object's like and follow counts """
@@ -629,7 +728,7 @@ class LikeableObjectMixin(models.Model):
             the automatic follow modal popup `confirm_likefollow_modal.html` """
         return self.get_absolute_url() + '?%s' % urlencode(self._get_likefollow_url_params('follow'))
     
-
+    
 def ensure_container(sender, **kwargs):
     """ Creates a root container instance for all hierarchical objects in a newly created group """
     created = kwargs.get('created', False)
