@@ -73,16 +73,7 @@ class CosinnusConf(AppConf):
             'cosinnus_etherpad.Ethercalc',
             'cosinnus_poll.Poll',
             'cosinnus_event.Event',
-        ],
-      'postman.Message': [
-            'cosinnus_file.FileEntry',
-            'cosinnus_todo.TodoEntry',
-            'cosinnus_etherpad.Etherpad',
-            'cosinnus_etherpad.Ethercalc',
-            'cosinnus_poll.Poll',
-            'cosinnus_event.Event',
-            'cosinnus_marketplace.Offer',
-        ],
+        ]
     }
     
     # Configures by which search terms each Attachable Model can be match-restricted in the select 2 box

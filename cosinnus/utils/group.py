@@ -19,6 +19,7 @@ DEFAULT_CONTENT_MODELS = [
     'cosinnus_etherpad.Etherpad'
 ]
 
+
 def move_group_content(from_group, to_group, models=None, verbose=False):
     """ Moves all BaseTaggableObject content from one CosinnusGroup to another. """
     if not models:
@@ -39,6 +40,7 @@ def move_group_content(from_group, to_group, models=None, verbose=False):
 
 
 _CosinnusGroup = None
+
 
 def get_cosinnus_group_model():
     """
@@ -64,13 +66,3 @@ def get_cosinnus_group_model():
         _CosinnusGroup = group_model
         
     return _CosinnusGroup   
-
-
-def message_group_admins_url(group, group_admins=None):
-    """ Generates a postman:write URL to the admins of the given group, complete with subject line """
-    group_admins = group_admins or group.actual_admins
-    if not group_admins:
-        return None
-    message_subject = force_text(_('Question about')) + ' ' + force_text(_('Group') if group.type == group.TYPE_SOCIETY else _('Project')) + ': ' + group.name
-    return reverse('postman:write', kwargs={'recipients':','.join([user.username for user in group_admins])}) + '?subject=' + urlquote(message_subject)
-        

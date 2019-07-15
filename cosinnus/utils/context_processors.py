@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from cosinnus_message.rocket_chat import RocketChatConnection
 from django.urls import reverse, resolve, Resolver404
 from django.utils.formats import get_format
 from django.utils.translation import get_language
@@ -8,7 +9,6 @@ from django.utils.translation import get_language
 from cosinnus.conf import settings as SETTINGS
 from cosinnus.core.registries import app_registry
 from cosinnus.models.serializers.profile import UserSimpleSerializer
-from postman.models import Message
 import json
 from cosinnus.core.registries.group_models import group_model_registry
 from cosinnus.models.group import CosinnusPortal
@@ -73,7 +73,7 @@ def cosinnus(request):
                 (getattr(SETTINGS, 'COSINNUS_USE_V2_NAVBAR_ADMIN_ONLY', False) and user.is_superuser)):
         from cosinnus_stream.models import Stream
         stream_unseen_count = Stream.objects.my_stream_unread_count(user)
-        unread_count = Message.objects.inbox_unread_count(user)
+        unread_count = RocketChatConnection().unread_messages(user)
     else:
         unread_count = 0
         stream_unseen_count = 0

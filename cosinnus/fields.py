@@ -10,6 +10,7 @@ from cosinnus.utils.user import filter_active_users
 
 User = get_user_model()
 
+
 class UserSelect2MultipleChoiceField(HeavyModelSelect2MultipleChoiceField):
     
     queryset = User.objects

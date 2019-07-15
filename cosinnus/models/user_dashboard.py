@@ -44,11 +44,11 @@ class DashboardItem(dict):
                 self['icon'] = 'fa-lightbulb-o'
                 self['text'] = escape(obj.title)
                 self['url'] = obj.get_absolute_url()
-            elif obj._meta.model.__name__ == 'Message':
-                self['icon'] = 'fa-envelope'
-                self['text'] = escape(obj.subject)
-                self['url'] = reverse('postman:view_conversation', kwargs={'thread_id': obj.thread_id}) if obj.thread_id else obj.get_absolute_url()
-                self['subtext'] = escape(', '.join([full_name(participant) for participant in obj.other_participants(user)]))
+            #elif obj._meta.model.__name__ == 'Message':
+            #    self['icon'] = 'fa-envelope'
+            #    self['text'] = escape(obj.subject)
+            #    self['url'] = reverse('postman:view_conversation', kwargs={'thread_id': obj.thread_id}) if obj.thread_id else obj.get_absolute_url()
+            #    self['subtext'] = escape(', '.join([full_name(participant) for participant in obj.other_participants(user)]))
             elif issubclass(obj.__class__, BaseUserProfile):
                 self['icon'] = 'fa-user'
                 self['text'] = escape(full_name(obj.user))

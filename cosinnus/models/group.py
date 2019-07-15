@@ -50,6 +50,7 @@ from cosinnus.models.mixins.images import ThumbnailableImageMixin
 from cosinnus.views.mixins.media import VideoEmbedFieldMixin,\
     FlickrEmbedFieldMixin
 from jsonfield.fields import JSONField
+from django.contrib.postgres.fields.jsonb import JSONField as PostgresJSONField
 from django.templatetags.static import static
 from cosinnus.models.mixins.indexes import IndexingUtilsMixin
 from cosinnus.core.registries.attached_objects import attached_object_registry
@@ -749,6 +750,8 @@ class CosinnusBaseGroup(LastVisitedMixin, LikeableObjectMixin, IndexingUtilsMixi
     # this indicates that objects of this model are in some way always visible by registered users
     # on the platform, no matter their visibility settings, and thus subject to moderation 
     cosinnus_always_visible_by_users_moderator_flag = True
+
+    settings = PostgresJSONField(default=dict, blank=True, null=True)
     
     objects = CosinnusGroupManager()
     
@@ -927,13 +930,7 @@ class CosinnusBaseGroup(LastVisitedMixin, LikeableObjectMixin, IndexingUtilsMixi
         return qs
     
     def get_admin_contact_url(self):
-        subject = _('Request about your project "%(group_name)s"') if self.type == self.TYPE_PROJECT else _('Request about your group "%(group_name)s"')
-        subject = subject % {'group_name': self.name} 
-        return '%s?subject=%s&next=%s' % (
-            reverse('postman:write', kwargs={'recipients': ':'.join([user.username for user in self.actual_admins])}), 
-            subject,
-            reverse('postman:sent')
-        )
+        return reverse('cosinnus:message-write-group', kwargs={'slug': self.slug})
     
     @classmethod
     def _clear_cache(self, slug=None, slugs=None, group=None):

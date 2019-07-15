@@ -18,7 +18,6 @@ from cosinnus.models.group import CosinnusPortal
 from cosinnus.models.group_extra import CosinnusSociety, CosinnusProject
 from cosinnus.models.profile import get_user_profile_model
 from cosinnus.templatetags.cosinnus_tags import textfield
-from cosinnus.utils.group import message_group_admins_url
 from cosinnus.utils.permissions import check_ug_membership, check_ug_pending,\
     check_ug_invited_pending
 from cosinnus.utils.urls import group_aware_reverse
@@ -262,10 +261,9 @@ class DetailedBaseGroupMapResult(DetailedMapResult):
     background_image_field = 'wallpaper'
 
     def __init__(self, haystack_result, obj, user, *args, **kwargs):
-        group_admins = list(obj.actual_admins)
         message_url = None
         if not settings.COSINNUS_IS_INTEGRATED_PORTAL:
-            message_url = message_group_admins_url(obj, group_admins)
+            message_url = reverse('cosinnus:message-write-group', kwargs={'slug': obj.slug})
         
         kwargs.update({
             'is_member': check_ug_membership(user, obj),
@@ -358,7 +356,8 @@ class DetailedUserMapResult(DetailedMapResult):
         })
         if not settings.COSINNUS_IS_INTEGRATED_PORTAL:
             kwargs.update({
-                'action_url_1': _prepend_url(user, None) + reverse('postman:write', kwargs={'recipients': obj.user.username}),
+                'action_url_1': _prepend_url(user, None) + reverse('cosinnus:message-write',
+                                                                   kwargs={'username': obj.user.username}),
             })
         # collect visible groups and projects that this user is in
         sqs = SearchQuerySet().models(SEARCH_MODEL_NAMES_REVERSE['projects'], SEARCH_MODEL_NAMES_REVERSE['groups'])
@@ -366,7 +365,7 @@ class DetailedUserMapResult(DetailedMapResult):
         # the preview for projects and groups is always visible for everyone!
         #sqs = filter_searchqueryset_for_read_access(sqs, user)
         sqs = sqs.order_by('title')
-        
+
         kwargs.update({
             'projects': [],
             'groups': [],
@@ -376,7 +375,7 @@ class DetailedUserMapResult(DetailedMapResult):
                 kwargs['projects'].append(HaystackProjectMapCard(result))
             else:
                 kwargs['groups'].append(HaystackGroupMapCard(result))
-                
+
         if getattr(settings, 'COSINNUS_USER_SHOW_MAY_BE_CONTACTED_FIELD', False):
             kwargs.update({
                 'may_be_contacted': obj.may_be_contacted,
@@ -526,20 +525,6 @@ try:
     #})
 except:
     FileEntry = None
-    
-try:
-    from postman.models import Message #noqa
-    SEARCH_MODEL_NAMES.update({
-        Message: 'messages',                           
-    })
-    SHORT_MODEL_MAP.update({
-        8: Message,
-    })
-    #SEARCH_RESULT_DETAIL_TYPE_MAP.update({
-    #    'messages': NYI,
-    #})
-except:
-    Message = None
 
 try:
     from cosinnus_todo.models import TodoEntry #noqa
