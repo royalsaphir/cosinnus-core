@@ -39,7 +39,6 @@ from annoying.functions import get_object_or_None
 from django.contrib.auth import get_user_model
 
 
-
 class PeopleModelMixin(models.Model):
     people_name = models.CharField(max_length=255, default='', blank=True)
 

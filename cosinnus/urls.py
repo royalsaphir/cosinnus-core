@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from cosinnus_message.api.views import MessageExportView
 from django.conf.urls import include, url
 from django.urls import reverse_lazy
 from django.views.generic.base import RedirectView, TemplateView
@@ -215,5 +216,6 @@ urlpatterns += [
     url(r'^o/me/', UserView.as_view()),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url(r'api/v2/docs/', get_swagger_view()),
+    url(r'api/v2/rocket-export/', MessageExportView.as_view()),
     url(r'api/v2/', include(router.urls)),
 ]

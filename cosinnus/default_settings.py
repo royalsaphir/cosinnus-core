@@ -192,6 +192,7 @@ def compile_installed_apps(internal_apps=[]):
         'cosinnus_event',
         'cosinnus_file',
         'cosinnus_marketplace',
+        'postman',
         'cosinnus_message',
         'cosinnus_note',
         'cosinnus_notifications',
@@ -421,11 +422,11 @@ COSINNUS_CHAT_SETTINGS = {
     'Accounts_AllowRealNameChange': True,
     'Accounts_AllowUserAvatarChange': True,
     'Accounts_AllowUserProfileChange': False,
-    'Accounts_AllowUserStatusMessageChange': True,
+    #'Accounts_AllowUserStatusMessageChange': True,
     'Accounts_AllowUsernameChange': False,
     'Accounts_ShowFormLogin': True,
     #'Accounts_Default_User_Preferences_sidebarGroupByType': False,
-    'Accounts_Default_User_Preferences_hideUsernames': True,
+    #'Accounts_Default_User_Preferences_hideUsernames': True,
 
     # Layout
     'Layout_Home_Body': '''<p>Willkommen bei Rocket.Chat!</p>
@@ -438,6 +439,9 @@ COSINNUS_CHAT_SETTINGS = {
     'Layout_Privacy_Policy': '<a href="https://wechange.de/cms/datenschutz/">Datenschutz</a>',
     #'UI_Group_Channels_By_Type': False,
     'UI_Use_Real_Name': True,
+
+    # Rate Limiter
+    'API_Enable_Rate_Limiter_Limit_Calls_Default': 100,
 }
 
 # default from-email:
