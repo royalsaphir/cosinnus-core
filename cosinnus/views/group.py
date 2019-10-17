@@ -285,7 +285,6 @@ class GroupCreateView(CosinnusGroupFormMixin, AvatarFormMixin, AjaxableFormMixin
         # if we have 'group=xx' in the GET, add the parent if we are looking at a project
         if 'group' in self.request.GET and 'parent' in kwargs['form'].forms['obj']._meta.fields:
             init_parent = CosinnusGroup.objects.get_cached(slugs=self.request.GET.get('group'))
-            logger.warn('GROUP IS: %s' % init_parent)
             kwargs['form'].forms['obj'].initial['parent'] = init_parent
             kwargs['form'].forms['obj'].fields['parent'].initial = init_parent
         return context
@@ -1168,7 +1167,7 @@ def group_user_recruit(request, group):
         Checks for recent invites and existing ones first. 
         Sends out invitation mails to newly invited users. """
     
-    MAXIMUM_EMAILS = 20
+    MAXIMUM_EMAILS = 50
     
     if not request.method=='POST':
         return HttpResponseNotAllowed(['POST'])
@@ -1265,14 +1264,15 @@ def group_user_recruit(request, group):
         setattr(group_copy, 'render_additional_notification_content_rows', render_additional_notification_content_rows)
     else:
         group_copy = group
-        
-    # send emails as notification signal
-    virtual_users = []
+
+    # collect target emails        
+    virtual_target_users = []
     for email in success:
         virtual_user = AnonymousUser()
         virtual_user.email = email
-        virtual_users.append(virtual_user)
-    signals.user_group_recruited.send(sender=user, obj=group_copy, user=user, audience=virtual_users)
+        virtual_target_users.append(virtual_user)
+    # send emails as single notification signal
+    signals.user_group_recruited.send(sender=user, obj=group_copy, user=user, audience=virtual_target_users)
     
     # create invite objects
     with transaction.atomic():

@@ -124,8 +124,10 @@
 	            		'groups_invited': "{{ groups_invited_json_encoded }}",
 	            		'group_requests': "{{ group_requests_json_encoded }}",
 	            		'group_requests_count': {{ group_requests_count }},
+	            		{% if SETTINGS.COSINNUS_IDEAS_ENABLED %}
 	            		'followed_ideas': "{{ followed_ideas_json_encoded }}",
 	            		'my_ideas': "{{ my_ideas_json_encoded }}",
+	            		{% endif %}
 	            		'attending_events': "{{ attending_events_json_encoded }}",
 	            	},
 	            	contextData: {
@@ -274,6 +276,21 @@
 				</li>
 			</ul>
 		</div>
+		
+		{% if request.user|is_superuser %}
+			<div class="nav-flyout-section padded">
+				<ul class="item-list">
+					<li>
+						<a href="{% url 'cosinnus:administration' %}" class="list-item" role="button" titledby=".item-text"> 
+				    		<div class="item-text">
+				    			{% trans "Administration" %} 
+				    		</div>
+						</a>
+					</li>
+				</ul>
+			</div>
+		
+		{% endif %}
 		
 		<div class="nav-flyout-section padded">
 			<ul class="item-list">

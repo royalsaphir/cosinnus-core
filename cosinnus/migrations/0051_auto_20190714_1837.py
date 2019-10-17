@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cosinnus', '0049_auto_20190529_1843'),
+        ('cosinnus', '0050_auto_20190707_1540'),
     ]
 
     operations = [
