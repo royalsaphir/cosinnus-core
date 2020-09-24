@@ -543,6 +543,9 @@ class _UserProfileFormExtraFieldsBaseMixin(object):
         'boolean': forms.BooleanField,
         'country': _make_country_formfield,
     }
+    # if set to a string, will only include such fields in the form
+    # that have the given option name set to True in `COSINNUS_USERPROFILE_EXTRA_FIELDS`
+    filter_included_fields_by_option_name = None
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -568,6 +571,10 @@ class _UserProfileFormExtraFieldsBaseMixin(object):
                 raise ImproperlyConfigured(f'COSINNUS_USERPROFILE_EXTRA_FIELDS: {field_name} does not define a "type" attribute of {self.__class__.__name__}.EXTRA_FIELD_TYPES!')
             if not options['type'] in self.EXTRA_FIELD_TYPES:
                 raise ImproperlyConfigured(f'COSINNUS_USERPROFILE_EXTRA_FIELDS: {field_name}\'s "type" attribute was not found in {self.__class__.__name__}.EXTRA_FIELD_TYPES!')
+            # filter by whether a given option is set
+            if self.filter_included_fields_by_option_name \
+                    and not options.get(self.filter_included_fields_by_option_name, False):
+                continue
             
             formfield_class = self.EXTRA_FIELD_TYPES[options['type']]
             self.fields[field_name] = formfield_class(
@@ -608,6 +615,9 @@ class UserProfileFormExtraFieldsMixin(_UserProfileFormExtraFieldsBaseMixin):
 
 class UserCreationFormExtraFieldsMixin(_UserProfileFormExtraFieldsBaseMixin):
     """ Like UserProfileFormExtraFieldsMixin, but works with the user signup form """
+    
+    # only show fields with option `in_signup` set to True
+    filter_included_fields_by_option_name = 'in_signup'
     
     def save(self, commit=True):
         """ Assign the extra fields to the user's cosinnus_profile's `extra_fields` 
