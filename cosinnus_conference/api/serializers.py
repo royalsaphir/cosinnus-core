@@ -4,11 +4,10 @@ from __future__ import unicode_literals
 from builtins import object
 import random
 
-from cosinnus.templatetags.cosinnus_tags import textfield
+from cosinnus.templatetags.cosinnus_tags import textfield, get_country_name
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from django_countries import countries
 
 from cosinnus.models.conference import CosinnusConferenceRoom
 from cosinnus.models.group import CosinnusGroup
@@ -149,7 +148,7 @@ class ConferenceParticipantSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'cosinnus_profile'):
             country_code = obj.cosinnus_profile.extra_fields.get('country', "")
             if country_code:
-                return dict(countries).get(country_code, '(unknown)')
+                return get_country_name(country_code)
         return ""
 
     def get_chat_url(self, obj):
