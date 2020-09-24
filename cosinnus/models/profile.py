@@ -532,11 +532,9 @@ def _make_country_formfield(**kwargs):
     ).formfield(**kwargs)
 
 
-class UserProfileFormExtraFieldsMixin(object):
-    """ Mixin for the UserProfile or User modelform that
-        adds functionality for by-portal configured extra profile form fields """
-    
-    userprofile_model = None # initialized later to get_user_profile_model()
+class _UserProfileFormExtraFieldsBaseMixin(object):
+    """ Base for the Mixins for the UserProfile or User modelforms that
+        add functionality for by-portal configured extra profile form fields """
     
     # a choice of field types for the settings dict values of `COSINNUS_USERPROFILE_EXTRA_FIELDS`
     # these will be initialized as variable form fields for the fields in `self.extra_fields`
@@ -547,21 +545,18 @@ class UserProfileFormExtraFieldsMixin(object):
     }
     
     def __init__(self, *args, **kwargs):
-        self.userprofile_model = get_user_profile_model()
         super().__init__(*args, **kwargs)
         self.prepare_extra_fields_initial()
         self.prepare_extra_fields()
-        del self.fields['extra_fields']
-        print('ERERRORRROR')
-        print(self.errors)
-        
+        if 'extra_fields' in self.fields:
+            del self.fields['extra_fields']
+            
     def prepare_extra_fields_initial(self):
-        """ Set the initial data for `self.extra_fields` as defined in
-            `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS` """
-        for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
-            if field_name in self.instance.extra_fields:
-                self.initial[field_name] = self.instance.extra_fields[field_name]
-        
+        """ Stub for settting the initial data for `self.extra_fields` as defined in
+            `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS`.
+            Only a form with an UpdateView needs to implement this.  """
+        pass
+    
     def prepare_extra_fields(self):
         """ Creates extra fields for `self.extra_fields` as defined in
             `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS` """
@@ -590,11 +585,43 @@ class UserProfileFormExtraFieldsMixin(object):
         setattr(self, 'extra_field_list', field_map.keys())
         setattr(self, 'extra_field_items', field_map.items())
     
+    
+class UserProfileFormExtraFieldsMixin(_UserProfileFormExtraFieldsBaseMixin):
+    """ Mixin for the UserProfile modelform that
+        adds functionality for by-portal configured extra profile form fields """
+    
+    def prepare_extra_fields_initial(self):
+        """ Set the initial data for `self.extra_fields` as defined in
+            `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS` """
+        for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
+            if field_name in self.instance.extra_fields:
+                self.initial[field_name] = self.instance.extra_fields[field_name]
+        
     def full_clean(self):
-        """ Assign the extra fields to the `extra_fields` JSON instead of model fields """
+        """ Assign the extra fields to the `extra_fields` the userprofile JSON field
+            instead of model fields, during regular form saving """
         super().full_clean()
         if hasattr(self, 'cleaned_data'):
             for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
                 self.instance.extra_fields[field_name] = self.cleaned_data.get(field_name, None)
-            
+
+
+class UserCreationFormExtraFieldsMixin(_UserProfileFormExtraFieldsBaseMixin):
+    """ Like UserProfileFormExtraFieldsMixin, but works with the user signup form """
+    
+    def save(self, commit=True):
+        """ Assign the extra fields to the user's cosinnus_profile's `extra_fields` 
+        JSON field instead of model fields, after user form save """
+        ret = super().save(commit=commit)
+        if commit:
+            if hasattr(self, 'cleaned_data'):
+                # sanity check, retrieve the user's profile (will create it if it doesnt exist)
+                if not self.instance.cosinnus_profile:
+                    get_user_profile_model()._default_manager.get_for_user(self.instance)
+                
+                profile = self.instance.cosinnus_profile
+                for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
+                    profile.extra_fields[field_name] = self.cleaned_data.get(field_name, None)
+                    profile.save()
+        return ret
     
