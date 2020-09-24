@@ -8,6 +8,7 @@ from cosinnus.templatetags.cosinnus_tags import textfield
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from django_countries import countries
 
 from cosinnus.models.conference import CosinnusConferenceRoom
 from cosinnus.models.group import CosinnusGroup
@@ -141,14 +142,14 @@ class ConferenceParticipantSerializer(serializers.ModelSerializer):
 
     def get_organisation(self, obj):
         if hasattr(obj, 'cosinnus_profile'):
-            return random.choice(["A", "B", "C"])
-            # return obj.cosinnus_profile.organisation
+            return obj.cosinnus_profile.extra_fields.get('organisation', "")
         return ""
 
     def get_country(self, obj):
         if hasattr(obj, 'cosinnus_profile'):
-            return random.choice(["Germany", "Russia", "Belarus"])
-            # return obj.cosinnus_profile.country
+            country_code = obj.cosinnus_profile.extra_fields.get('country', "")
+            if country_code:
+                return dict(countries).get(country_code, '(unknown)')
         return ""
 
     def get_chat_url(self, obj):
