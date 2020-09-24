@@ -526,7 +526,10 @@ class GlobalBlacklistedEmail(models.Model):
 
 
 def _make_country_formfield(**kwargs):
-    return CountryField().formfield(**kwargs)
+    return CountryField(
+        blank=True,
+        blank_label=_('--- No country selected ---')
+    ).formfield(**kwargs)
 
 
 class UserProfileFormExtraFieldsMixin(object):
@@ -546,7 +549,18 @@ class UserProfileFormExtraFieldsMixin(object):
     def __init__(self, *args, **kwargs):
         self.userprofile_model = get_user_profile_model()
         super().__init__(*args, **kwargs)
+        self.prepare_extra_fields_initial()
         self.prepare_extra_fields()
+        del self.fields['extra_fields']
+        print('ERERRORRROR')
+        print(self.errors)
+        
+    def prepare_extra_fields_initial(self):
+        """ Set the initial data for `self.extra_fields` as defined in
+            `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS` """
+        for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
+            if field_name in self.instance.extra_fields:
+                self.initial[field_name] = self.instance.extra_fields[field_name]
         
     def prepare_extra_fields(self):
         """ Creates extra fields for `self.extra_fields` as defined in
@@ -563,8 +577,8 @@ class UserProfileFormExtraFieldsMixin(object):
             formfield_class = self.EXTRA_FIELD_TYPES[options['type']]
             self.fields[field_name] = formfield_class(
                 label=options.get('label', None),
-                initial=self.initial.get(field_name),
-                required=options.get('required'),
+                initial=self.initial.get(field_name, None),
+                required=options.get('required', False),
             )
             setattr(self.fields[field_name], 'label', options.get('label', None))
             setattr(self.fields[field_name], 'legend', options.get('legend', None))
@@ -575,5 +589,12 @@ class UserProfileFormExtraFieldsMixin(object):
             
         setattr(self, 'extra_field_list', field_map.keys())
         setattr(self, 'extra_field_items', field_map.items())
-        
+    
+    def full_clean(self):
+        """ Assign the extra fields to the `extra_fields` JSON instead of model fields """
+        super().full_clean()
+        if hasattr(self, 'cleaned_data'):
+            for field_name in settings.COSINNUS_USERPROFILE_EXTRA_FIELDS.keys():
+                self.instance.extra_fields[field_name] = self.cleaned_data.get(field_name, None)
+            
     
