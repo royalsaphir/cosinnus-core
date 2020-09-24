@@ -110,6 +110,17 @@
 	                {% include 'cosinnus/fields/checkbox_field.html' with field=form.forms.obj.may_be_contacted label=mc_label legend=mc_legend checkbox_label=mc_box_label %}
                 {% endif %}
                 
+                {% comment %} The fields in this block are generated from `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS` {% endcomment %}
+                {% block dynamic_userprofile_extra_fields %}
+                    {% for extra_field_name, extra_field in form.forms.obj|get_attr:'extra_field_items' %}
+                        {% with bound_extra_field=form.forms.obj|get_item:extra_field_name %}
+	                        {# Regular Field #}
+		                    {% include 'cosinnus/fields/default_field.html' with field=bound_extra_field label=extra_field.label legend=extra_field.legend placeholder=extra_field.placeholder %}
+	                    {% endwith %}
+                    {% endfor %}
+                {% endblock %}
+                
+                {% comment %} This block can be used to override fields using templates {% endcomment %}
                 {% block userprofile_extra_fields %}
                 {% endblock userprofile_extra_fields %}
                 
