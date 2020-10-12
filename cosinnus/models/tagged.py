@@ -40,6 +40,7 @@ from django.contrib.auth import get_user_model
 
 import logging
 from cosinnus.utils.dates import timestamp_from_datetime
+from cosinnus.models.managed_tags import CosinnusManagedTagAssignment
 
 logger = logging.getLogger('cosinnus')
 
@@ -141,6 +142,7 @@ class BaseTagObject(models.Model):
     # We cannot add choices here as this would fail validation
     topics = models.CharField(_('Topics'), blank=True,
         null=True, max_length=255, validators=[validate_comma_separated_integer_list])
+    managed_tags = GenericRelation('cosinnus.CosinnusManagedTagAssignment')
     
     text_topics = models.ManyToManyField(CosinnusTopicCategory, verbose_name=_('Text Topics'), 
         related_name='tagged_objects', blank=True)

@@ -55,6 +55,7 @@ from django.apps import apps
 from cosinnus.models.tagged import LikeableObjectMixin, LastVisitedMixin
 import datetime
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 
 
 logger = logging.getLogger('cosinnus')
@@ -750,6 +751,8 @@ class CosinnusBaseGroup(LastVisitedMixin, LikeableObjectMixin, IndexingUtilsMixi
     extra_fields = JSONField(default={}, blank=True)
     settings = PostgresJSONField(default=dict, blank=True, null=True)
     sdgs = PostgresJSONField(default=list, blank=True, null=True)
+    
+    managed_tags = GenericRelation('cosinnus.CosinnusManagedTagAssignment')
 
     objects = CosinnusGroupManager()
 
