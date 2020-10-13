@@ -9,12 +9,12 @@ from multiform.forms import InvalidArgument
 
 from cosinnus.models.profile import get_user_profile_model,\
     UserProfileFormExtraFieldsMixin
-from cosinnus.forms.tagged import get_form  
+from cosinnus.forms.tagged import get_form  , ManagedTagFormMixin
 from cosinnus.forms.user import UserChangeForm
 from cosinnus.conf import settings
 
 
-class _UserProfileForm(UserProfileFormExtraFieldsMixin, forms.ModelForm):
+class _UserProfileForm(UserProfileFormExtraFieldsMixin, ManagedTagFormMixin, forms.ModelForm):
     
     avatar = avatar_forms.AvatarField(required=False, disable_preview=True)
     website = forms.URLField(widget=forms.TextInput, required=False)
@@ -22,6 +22,8 @@ class _UserProfileForm(UserProfileFormExtraFieldsMixin, forms.ModelForm):
     
     if settings.COSINNUS_USERPROFILE_ENABLE_NEWSLETTER_OPT_IN:
         newsletter_opt_in = forms.BooleanField(label='newsletter_opt_in', required=False)
+    if settings.COSINNUS_MANAGED_TAGS_ENABLED:
+        managed_tag_field = forms.CharField(required=False)
     
     class Meta(object):
         model = get_user_profile_model()

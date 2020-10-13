@@ -39,6 +39,7 @@ from cosinnus.models.mixins.indexes import IndexingUtilsMixin
 import logging
 from django import forms
 from django_countries.fields import CountryField
+from django.contrib.contenttypes.fields import GenericRelation
 
 logger = logging.getLogger('cosinnus')
 
@@ -133,9 +134,11 @@ class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, m
     extra_fields = JSONField(default={}, blank=True,
                 help_text='Extra userprofile fields for each portal, as defined in `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS`')
     
+    managed_tags = GenericRelation('cosinnus.CosinnusManagedTagAssignment')
+    
     objects = BaseUserProfileManager()
 
-    SKIP_FIELDS = ['id', 'user', 'user_id', 'media_tag', 'media_tag_id', 'settings']\
+    SKIP_FIELDS = ['id', 'user', 'user_id', 'media_tag', 'media_tag_id', 'settings', 'managed_tags']\
                     + getattr(cosinnus_settings, 'COSINNUS_USER_PROFILE_ADDITIONAL_FORM_SKIP_FIELDS', [])
     
     # this indicates that objects of this model are in some way always visible by registered users
