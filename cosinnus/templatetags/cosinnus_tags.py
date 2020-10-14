@@ -252,9 +252,9 @@ def stringify(value):
     return str(value)
 
 @register.filter
-def contains(value, item):
+def contains(iterable, item):
     """Template filter to check if an iterable contains an item, just like the `in` keyword """
-    return bool(value in item)
+    return bool(iterable is not None and item in iterable)
 
 
 @register.simple_tag(takes_context=True)

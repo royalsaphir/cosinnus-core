@@ -9,9 +9,10 @@ from multiform.forms import InvalidArgument
 
 from cosinnus.models.profile import get_user_profile_model,\
     UserProfileFormExtraFieldsMixin
-from cosinnus.forms.tagged import get_form  , ManagedTagFormMixin
+from cosinnus.forms.tagged import get_form
 from cosinnus.forms.user import UserChangeForm
 from cosinnus.conf import settings
+from cosinnus.forms.managed_tags import ManagedTagFormMixin
 
 
 class _UserProfileForm(UserProfileFormExtraFieldsMixin, ManagedTagFormMixin, forms.ModelForm):
@@ -34,7 +35,6 @@ class _UserProfileForm(UserProfileFormExtraFieldsMixin, ManagedTagFormMixin, for
         if settings.COSINNUS_USERPROFILE_ENABLE_NEWSLETTER_OPT_IN:
             self.initial['newsletter_opt_in'] = self.instance.settings.get('newsletter_opt_in', False)
     
-    
     def save(self, commit=True):
         """ Set the username equal to the userid """
         profile = super(_UserProfileForm, self).save(commit=True)
@@ -45,6 +45,7 @@ class _UserProfileForm(UserProfileFormExtraFieldsMixin, ManagedTagFormMixin, for
             profile.save(update_fields=['settings'])
                 
         return profile
+
 
 class UserProfileForm(get_form(_UserProfileForm, attachable=False, extra_forms={'user': UserChangeForm})):
     

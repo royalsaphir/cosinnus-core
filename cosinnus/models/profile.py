@@ -135,11 +135,11 @@ class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, m
     extra_fields = JSONField(default={}, blank=True,
                 help_text='Extra userprofile fields for each portal, as defined in `settings.COSINNUS_USERPROFILE_EXTRA_FIELDS`')
     
-    managed_tags = GenericRelation('cosinnus.CosinnusManagedTagAssignment')
+    managed_tag_assignments = GenericRelation('cosinnus.CosinnusManagedTagAssignment')
     
     objects = BaseUserProfileManager()
 
-    SKIP_FIELDS = ['id', 'user', 'user_id', 'media_tag', 'media_tag_id', 'settings', 'managed_tags']\
+    SKIP_FIELDS = ['id', 'user', 'user_id', 'media_tag', 'media_tag_id', 'settings', 'managed_tag_assignments']\
                     + getattr(cosinnus_settings, 'COSINNUS_USER_PROFILE_ADDITIONAL_FORM_SKIP_FIELDS', [])
     
     # this indicates that objects of this model are in some way always visible by registered users
@@ -172,10 +172,8 @@ class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, m
     
     def get_managed_tags(self):
         """ Returns all managed tags approved for this profile """
-        tag_ids = self.managed_tags.all().filter(approved=True).values_list('managed_tag', flat=True)
-        ret = CosinnusManagedTag.objects.get_cached(list(tag_ids))
-        print(ret)
-        return ret 
+        tag_ids = self.managed_tag_assignments.all().filter(approved=True).values_list('managed_tag', flat=True)
+        return CosinnusManagedTag.objects.get_cached(list(tag_ids))
     
     def save(self, *args, **kwargs):
         created = bool(self.pk is None)

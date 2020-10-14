@@ -16,11 +16,10 @@ from cosinnus.forms.select2 import TagSelect2Field
 from django.urls import reverse_lazy
 from django.http.request import QueryDict
 
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from django_select2.fields import HeavySelect2MultipleChoiceField, Select2ChoiceField
+from django_select2.fields import Select2ChoiceField
 
 from cosinnus.forms.select2 import CommaSeparatedSelect2MultipleChoiceField
 
@@ -29,12 +28,6 @@ from django.forms.widgets import SelectMultiple
 from django_select2.widgets import Select2MultipleWidget, Select2Widget
 from cosinnus.utils.user import get_user_select2_pills
 from cosinnus.fields import UserSelect2MultipleChoiceField
-from cosinnus.templatetags.cosinnus_tags import full_name
-from cosinnus.conf import settings
-from cosinnus.models.managed_tags import CosinnusManagedTag,\
-    CosinnusManagedTagAssignment
-from annoying.functions import get_object_or_None
-from cosinnus.models.group import CosinnusPortal
 
 
 TagObject = get_tag_object_model()
@@ -341,43 +334,5 @@ def get_form(TaggableObjectFormClass, attachable=True, extra_forms={}, init_func
     
 
     return TaggableObjectForm
-
-
-if getattr(settings, 'COSINNUS_MANAGED_TAGS_ENABLED', False) and getattr(settings, 'COSINNUS_MANAGED_TAGS_USERS_MAY_ASSIGN_SELF'):
-    class _ManagedTagFormMixin(object):
-        
-        def __init__(self, *args, **kwargs):
-            super(_ManagedTagFormMixin, self).__init__(*args, **kwargs)
-            if 'managed_tag_field' in self.fields:
-                setattr(self.fields['managed_tag_field'], 'all_managed_tags', CosinnusManagedTag.objects.all_in_portal())
-            if self.instance and self.instance.pk:
-                qs = self.instance.managed_tags.all()
-                managed_tag_slugs = qs.filter(approved=True).values_list('managed_tag__slug', flat=True)
-                if managed_tag_slugs:
-                    self.fields['managed_tag_field'].initial = ','.join(list(managed_tag_slugs))
-        
-        def clean_managed_tag_field(self):
-            """ Todo: This method supports only single-tag cleaning for now! """
-            self.save_managed_tags = []
-            tag_value = self.cleaned_data['managed_tag_field']
-            if tag_value:
-                found_tag = get_object_or_None(CosinnusManagedTag, portal=CosinnusPortal.get_current(), slug=tag_value)
-                if not found_tag:
-                    raise forms.ValidationError(_('The selected choice was not found or invalid! Please choose a different value!'))
-                self.save_managed_tags = [tag_value]
-            return tag_value
-        
-        def save(self, commit=True):
-            """ Set the username equal to the userid """
-            obj = super(_ManagedTagFormMixin, self).save(commit=True)
-            # create new managed tag assignments and delete old ones
-            CosinnusManagedTagAssignment.update_assignments_for_object(obj, self.save_managed_tags)
-            return obj
-        
-else:
-    class _ManagedTagFormMixin(object):
-        pass
-    
-ManagedTagFormMixin = _ManagedTagFormMixin
 
     
