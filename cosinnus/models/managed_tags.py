@@ -5,27 +5,32 @@ from builtins import object
 from collections import OrderedDict
 import logging
 
+from annoying.functions import get_object_or_None
+from django.apps import apps
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxLengthValidator
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+import six
 
-from django.core.cache import cache
 from cosinnus.conf import settings
 from cosinnus.utils.files import get_managed_tag_image_filename, image_thumbnail, \
     image_thumbnail_url
 from cosinnus.utils.functions import clean_single_line_text, resolve_class
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.core.validators import MaxLengthValidator
-from cosinnus.models.group import CosinnusPortal
-from annoying.functions import get_object_or_None
-from numpy.linalg.tests.test_linalg import all_tags
-import six
 
 
 logger = logging.getLogger('cosinnus')
 
+_CosinnusPortal = None
+def CosinnusPortal():
+    global _CosinnusPortal
+    if _CosinnusPortal is None: 
+        _CosinnusPortal = apps.get_model('cosinnus', 'CosinnusPortal')
+    return _CosinnusPortal
 
 
 class CosinnusManagedTagLabels(object):
@@ -63,7 +68,7 @@ class CosinnusManagedTagManager(models.Manager):
     def all_in_portal(self):
         """ Returns all groups within the current portal only """
         # TODO: cache!
-        return self.get_queryset().filter(portal=CosinnusPortal.get_current())
+        return self.get_queryset().filter(portal=CosinnusPortal().get_current())
     
     def get_cached(self, pk_or_id_or_list):
         """ Returns one or many cached tags, by any given combination of a single int pk,
@@ -71,7 +76,7 @@ class CosinnusManagedTagManager(models.Manager):
             @param pk_or_id_or_list: int or str or list of int or strs to return tag by pk or slug """
         
         if not pk_or_id_or_list:
-            return
+            return [] if pk_or_id_or_list == [] else None
         single = isinstance(pk_or_id_or_list, six.string_types) or isinstance(pk_or_id_or_list, int)
         if single:
             pk_or_id_or_list = [pk_or_id_or_list]
@@ -107,7 +112,7 @@ class CosinnusManagedTagManager(models.Manager):
 #             will be raised in case the requested object does not exist.
 #         """
 #         if portal_id is None:
-#             portal_id = CosinnusPortal.get_current().id
+#             portal_id = CosinnusPortal().get_current().id
 #             
 #         # Check that at most one of slugs and pks is set
 #         assert not (slugs and pks)
@@ -160,7 +165,7 @@ class CosinnusManagedTagManager(models.Manager):
 #             groups
 #         """
 #         if portal_id is None:
-#             portal_id = CosinnusPortal.get_current().id
+#             portal_id = CosinnusPortal().get_current().id
 #             
 #         pks = cache.get(self._IDEAS_PK_TO_SLUG_CACHE_KEY % (portal_id))
 #         if force or pks is None:
@@ -250,7 +255,7 @@ class CosinnusManagedTagAssignment(models.Model):
         # add wanted non-existant tags
         for slug in slugs_to_assign:
             # todo: cache!
-            managed_tag = get_object_or_None(CosinnusManagedTag, portal=CosinnusPortal.get_current(), slug=slug)
+            managed_tag = get_object_or_None(CosinnusManagedTag, portal=CosinnusPortal().get_current(), slug=slug)
             if managed_tag:
                 approve = not bool(settings.COSINNUS_MANAGED_TAGS_USER_TAGS_REQUIRE_APPROVAL)
                 cls.objects.create(content_type=content_type, object_id=obj.id, managed_tag=managed_tag, approved=approve)
@@ -320,7 +325,7 @@ class CosinnusManagedTag(models.Model):
         slugs = [self.slug] if self.slug else []
         self.name = clean_single_line_text(self.name)
         
-        current_portal = self.portal or CosinnusPortal.get_current()
+        current_portal = self.portal or CosinnusPortal().get_current()
         
         if not self.slug:
             raise ValidationError(_('Slug must not be empty.'))
@@ -351,10 +356,10 @@ class CosinnusManagedTag(models.Model):
         slugs = set([s for s in slugs]) if slugs else set()
         if slug: slugs.add(slug)
         keys = [
-            self.objects._IDEAS_PK_TO_SLUG_CACHE_KEY % (CosinnusPortal.get_current().id),
+            self.objects._IDEAS_PK_TO_SLUG_CACHE_KEY % (CosinnusPortal().get_current().id),
         ]
         if slugs:
-            keys.extend([self.objects._IDEAS_SLUG_CACHE_KEY % (CosinnusPortal.get_current().id, s) for s in slugs])
+            keys.extend([self.objects._IDEAS_SLUG_CACHE_KEY % (CosinnusPortal().get_current().id, s) for s in slugs])
         cache.delete_many(keys)
         
     def clear_cache(self):
@@ -380,4 +385,15 @@ class CosinnusManagedTag(models.Model):
         # todo
         return '???'
     
+
+class CosinnusManagedTagAssignmentModelMixin(object):
+    """ Mixin for models that can have CosinnusManagedTagAssignments assigned. 
+        You still need to add 
+        `managed_tag_assignments = GenericRelation('cosinnus.CosinnusManagedTagAssignment')` 
+        to your model. """
     
+    def get_managed_tags(self):
+        """ Returns all managed tags approved for this profile """
+        tag_ids = self.managed_tag_assignments.all().filter(approved=True).values_list('managed_tag', flat=True)
+        return CosinnusManagedTag.objects.get_cached(list(tag_ids))
+

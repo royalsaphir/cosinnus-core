@@ -33,5 +33,12 @@
 	        {% endfor %}
 	    </select>
 	{% endcaptureas %}
-	{% include 'cosinnus/fields/default_field.html' with field_html=managed_tag_field_html field=form.managed_tag_field field_id="managed-tag-field" label=COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LABEL legend=COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LEGEND_PROFILE extra_html=managed_tag_extra_html %}
+	
+	{% if not label %}
+        {% captureas label %}{{ COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LABEL }}{% endcaptureas %}
+    {% endif %}
+    {% if not legend %}
+        {% captureas legend %}{{ COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LEGEND_CONTENT }}{% endcaptureas %}
+    {% endif %}
+	{% include 'cosinnus/fields/default_field.html' with field_html=managed_tag_field_html field=form.managed_tag_field field_id="managed-tag-field" label=label legend=legend extra_html=managed_tag_extra_html %}
 {% endif %}

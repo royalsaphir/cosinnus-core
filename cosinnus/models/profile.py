@@ -40,7 +40,8 @@ import logging
 from django import forms
 from django_countries.fields import CountryField
 from django.contrib.contenttypes.fields import GenericRelation
-from cosinnus.models.managed_tags import CosinnusManagedTag
+from cosinnus.models.managed_tags import CosinnusManagedTag,\
+    CosinnusManagedTagAssignmentModelMixin
 
 logger = logging.getLogger('cosinnus')
 
@@ -84,7 +85,8 @@ class BaseUserProfileManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, models.Model):
+class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin,
+                      CosinnusManagedTagAssignmentModelMixin, models.Model):
     """
     This is a base user profile used within cosinnus. To use it, create your
     own model inheriting from this model.
@@ -169,11 +171,6 @@ class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, m
     def get_extended_full_name(self):
         """ Stub extended username, including possible titles, middle names, etc """
         return self.get_full_name()
-    
-    def get_managed_tags(self):
-        """ Returns all managed tags approved for this profile """
-        tag_ids = self.managed_tag_assignments.all().filter(approved=True).values_list('managed_tag', flat=True)
-        return CosinnusManagedTag.objects.get_cached(list(tag_ids))
     
     def save(self, *args, **kwargs):
         created = bool(self.pk is None)

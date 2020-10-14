@@ -258,7 +258,7 @@ def get_form(TaggableObjectFormClass, attachable=True, extra_forms={}, init_func
             """
             Save both forms and attach the media_tag to the taggable object.
             """
-            instances = super(TaggableObjectForm, self).save(commit=False)
+            instances = super(TaggableObjectForm, self).save(commit=commit )
 
             # For easy access
             obj = instances['obj']
