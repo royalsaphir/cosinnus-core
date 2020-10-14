@@ -46,6 +46,8 @@ class CosinnusManagedTagLabels(object):
     MANAGED_TAG_FIELD_LEGEND_CONTENT = None
     # formfield description for the user profile
     MANAGED_TAG_FIELD_LEGEND_PROFILE = None
+    # in the select list, this is the "none chosen" choice string
+    MANAGED_TAG_FIELD_EMPTY_CHOICE = _('No Tag selected')
     
 
 # allow dropin of labels class
@@ -249,7 +251,7 @@ class CosinnusManagedTag(models.Model):
         null=True, blank=True,
         upload_to=get_managed_tag_image_filename,
         max_length=250)
-    
+    url = models.URLField(_('URL'), max_length=200, blank=True, null=True, validators=[MaxLengthValidator(200)])
     color = models.CharField(_('Color'),
          max_length=10, validators=[MaxLengthValidator(7)],
          help_text=_('Optional color code (css hex value, with or without "#")'),
@@ -259,12 +261,16 @@ class CosinnusManagedTag(models.Model):
         verbose_name=_('Paired Group'),
         blank=True, null=True, related_name='paired_managed_tag',
         on_delete=models.SET_NULL,
-        help_text='A paired group will automatically be joined by all users assigned to this.')
+        help_text=_('A paired group will automatically be joined by all users assigned to this object.'))
+    search_synonyms = models.TextField(_('Search Synonyms'),
+        blank=True, null=True,
+        help_text=_('Comma-seperated list of phrases for which auto-complete matches, even partial, will return this object.'))
     
     created = models.DateTimeField(verbose_name=_('Created'), editable=False, auto_now_add=True)
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('Creator'), on_delete=models.CASCADE,
         null=True, blank=True, related_name='+')
     last_modified = models.DateTimeField( verbose_name=_('Last modified'), editable=False, auto_now=True)
+    
     
     objects = CosinnusManagedTagManager()
     
@@ -341,7 +347,12 @@ class CosinnusManagedTag(models.Model):
         return image_thumbnail_url(self.image, size)
     
     def get_absolute_url(self):
+        """ Returns the assigned url field's url """
+        return self.url or ''
+    
+    def get_search_url(self):
+        """ Returns the filtered search view for this tag """
         # todo
-        #return get_domain_for_portal(self.portal) + '???tag/' + self.slug
-        return ''
+        return '???'
+    
     

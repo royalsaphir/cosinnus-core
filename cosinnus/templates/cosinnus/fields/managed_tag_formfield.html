@@ -47,7 +47,7 @@
 	{% endcaptureas %}
 	{% captureas managed_tag_field_html %}
 	    <select name="managed_tag_field" id="managed-tag-field">
-	        <option default value="">---</option>
+	        <option default value="">- {{ form.forms.obj.fields.managed_tag_field.labels.MANAGED_TAG_FIELD_EMPTY_CHOICE }} -</option>
 	        {% for tag in form.forms.obj.fields.managed_tag_field.all_managed_tags %}
 	            <option {% if tag.slug in form.forms.obj.fields.managed_tag_field.initial %}selected{% endif %} value="{{ tag.slug }}">
 	                {{ tag.name }}
