@@ -5,37 +5,15 @@
 	    {% if SETTINGS.COSINNUS_MANAGED_TAGS_SHOW_FORMFIELD_SELECTED_TAG_DETAILS %}
 		    <div class="managed-tags-form-detail-frame" id="managed-tags-detail-frame" {% if not form.forms.obj.fields.managed_tag_field.initial %}style="display: none;"{% endif %}>
 		        {% for tag in form.forms.obj.fields.managed_tag_field.all_managed_tags %}
-	                <div class="row tag-detail" data-tag-slug="{{ tag.slug }}" {% if not tag.slug in form.forms.obj.fields.managed_tag_field.initial %}style="display: none;"{% endif %}>
-	                    {% if tag.image %}
-	                        <div class="col-xs-2 tag-image">
-	                            <img class="image forms-managed-tags detail-image" src="{{ tag.get_image_thumbnail_url }}">
-		                    </div>
-	                    {% else %}
-	                        <div class="col-xs-2 tag-icon">
-					            <i class="fa fa-fw fa-4x {{ form.forms.obj.fields.managed_tag_field.labels.ICON }}"></i>
-	                        </div>
-	                    {% endif %}
-	                    <div class="col-xs-10 tag-content">
-	                        <h2 class="forms-managed-tags detail-name">
-	                            <a target="_blank" {% if tag.get_absolute_url %}href="{{ tag.get_absolute_url}}"{% else %}disabled{% endif %}>
-		                            {{ tag.name }}
-	                            </a>
-	                        </h2>
-	                        {% if tag.description %}
-		                        <p class="transparent forms-managed-tags detail-description">
-		                            {{ tag.description }}
-		                        </p>
-	                        {% endif %}
-	                    </div>
-	                </div>	            
+	                {% include 'cosinnus/fields/managed_tag_userprofile_field_readonly.html' with tag=tag visible=form.forms.obj.fields.managed_tag_field.initial|contains:tag.slug %}
 		        {% endfor %}
 		    </div>
 		    <script type="text/javascript">
 		        $(function(){
 		            $('#managed-tag-field').on('change', function(){
-		                $('.tag-detail').hide()
+		                $('.managed-tag-detail').hide()
 	 	                if ($(this).val()) {
-	 	                    $('.tag-detail[data-tag-slug="' + $(this).val() + '"]').show();
+	 	                    $('.managed-tag-detail[data-tag-slug="' + $(this).val() + '"]').show();
 		                    $('#managed-tags-detail-frame').show();
 		                } else {
 		                    $('#managed-tags-detail-frame').hide();
@@ -47,7 +25,7 @@
 	{% endcaptureas %}
 	{% captureas managed_tag_field_html %}
 	    <select name="managed_tag_field" id="managed-tag-field">
-	        <option default value="">- {{ form.forms.obj.fields.managed_tag_field.labels.MANAGED_TAG_FIELD_EMPTY_CHOICE }} -</option>
+	        <option default value="">- {{ COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_EMPTY_CHOICE }} -</option>
 	        {% for tag in form.forms.obj.fields.managed_tag_field.all_managed_tags %}
 	            <option {% if tag.slug in form.forms.obj.fields.managed_tag_field.initial %}selected{% endif %} value="{{ tag.slug }}">
 	                {{ tag.name }}
@@ -55,5 +33,5 @@
 	        {% endfor %}
 	    </select>
 	{% endcaptureas %}
-	{% include 'cosinnus/fields/default_field.html' with field_html=managed_tag_field_html field=form.forms.obj.managed_tag_field field_id="managed-tag-field" label=form.forms.obj.fields.managed_tag_field.labels.MANAGED_TAG_FIELD_LABEL legend=form.forms.obj.fields.managed_tag_field.labels.MANAGED_TAG_FIELD_LEGEND_PROFILE extra_html=managed_tag_extra_html %}
+	{% include 'cosinnus/fields/default_field.html' with field_html=managed_tag_field_html field=form.forms.obj.managed_tag_field field_id="managed-tag-field" label=COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LABEL legend=COSINNUS_MANAGED_TAG_LABELS.MANAGED_TAG_FIELD_LEGEND_PROFILE extra_html=managed_tag_extra_html %}
 {% endif %}

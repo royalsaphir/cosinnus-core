@@ -279,7 +279,7 @@ def managed_tag_sync_paired_group_memebership_creation(sender, instance, created
         create the user's group membership in the paired group if it doesn't exist yet """
     try:
         target_object = instance.target_object
-        if instance.approved and target_object and type(target_object) is get_user_profile_model():
+        if instance.approved and target_object and isinstance(target_object, get_user_profile_model()):
             tag = instance.managed_tag
             if tag.paired_group:
                 membership = get_object_or_None(CosinnusGroupMembership, group=tag.paired_group, user=target_object.user)

@@ -20,6 +20,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.validators import MaxLengthValidator
 from cosinnus.models.group import CosinnusPortal
 from annoying.functions import get_object_or_None
+from numpy.linalg.tests.test_linalg import all_tags
+import six
 
 
 logger = logging.getLogger('cosinnus')
@@ -30,15 +32,15 @@ class CosinnusManagedTagLabels(object):
     
     ICON = 'fa-tags'
     
-    ASSIGNMENT_VERBOSE_NAME = _('Managed Tag Assignment')
-    ASSIGNMENT_VERBOSE_NAME_PLURAL = _('Managed Tag Assignments')
-    
     MANAGED_TAG_NAME = _('Managed Tag')
     MANAGED_TAG_NAME_PLURAL = _('Managed Tag')
     
     CREATE_MANAGED_TAG = _('Create Managed Tag')
     EDIT_MANAGED_TAG = _('Edit Managed Tag')
     DELETE_MANAGED_TAG = _('Delete Managed Tag')
+    
+    ASSIGNMENT_VERBOSE_NAME = _('Managed Tag Assignment')
+    ASSIGNMENT_VERBOSE_NAME_PLURAL = _('Managed Tag Assignments')
     
     # formfield title
     MANAGED_TAG_FIELD_LABEL = MANAGED_TAG_NAME
@@ -62,6 +64,29 @@ class CosinnusManagedTagManager(models.Manager):
         """ Returns all groups within the current portal only """
         # TODO: cache!
         return self.get_queryset().filter(portal=CosinnusPortal.get_current())
+    
+    def get_cached(self, pk_or_id_or_list):
+        """ Returns one or many cached tags, by any given combination of a single int pk,
+            str slug or a list of both combinations.
+            @param pk_or_id_or_list: int or str or list of int or strs to return tag by pk or slug """
+        
+        if not pk_or_id_or_list:
+            return
+        single = isinstance(pk_or_id_or_list, six.string_types) or isinstance(pk_or_id_or_list, int)
+        if single:
+            pk_or_id_or_list = [pk_or_id_or_list]
+        
+        # TODO cache the dicts!
+        all_tags = self.all_in_portal()
+        tag_dict = dict([(tag.id, tag) for tag in all_tags] + [(tag.slug, tag) for tag in all_tags])
+        
+        tags = []
+        for pk_or_slug in pk_or_id_or_list:
+            tags.append(tag_dict.get(pk_or_slug, None))
+        if single:
+            return tags[0]
+        return tags
+        
     
 #     # main pk to object key
 #     _MANAGED_TAGS_PK_CACHE_KEY = 'cosinnus/core/portal/%d/managedtags/pks/%d' # portal_id, slug -> idea

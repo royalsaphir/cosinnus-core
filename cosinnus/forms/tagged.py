@@ -350,7 +350,6 @@ if getattr(settings, 'COSINNUS_MANAGED_TAGS_ENABLED', False) and getattr(setting
             super(_ManagedTagFormMixin, self).__init__(*args, **kwargs)
             if 'managed_tag_field' in self.fields:
                 setattr(self.fields['managed_tag_field'], 'all_managed_tags', CosinnusManagedTag.objects.all_in_portal())
-                setattr(self.fields['managed_tag_field'], 'labels', CosinnusManagedTag.labels)
             if self.instance and self.instance.pk:
                 qs = self.instance.managed_tags.all()
                 managed_tag_slugs = qs.filter(approved=True).values_list('managed_tag__slug', flat=True)

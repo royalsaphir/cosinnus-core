@@ -40,6 +40,7 @@ import logging
 from django import forms
 from django_countries.fields import CountryField
 from django.contrib.contenttypes.fields import GenericRelation
+from cosinnus.models.managed_tags import CosinnusManagedTag
 
 logger = logging.getLogger('cosinnus')
 
@@ -168,6 +169,13 @@ class BaseUserProfile(IndexingUtilsMixin, FacebookIntegrationUserProfileMixin, m
     def get_extended_full_name(self):
         """ Stub extended username, including possible titles, middle names, etc """
         return self.get_full_name()
+    
+    def get_managed_tags(self):
+        """ Returns all managed tags approved for this profile """
+        tag_ids = self.managed_tags.all().filter(approved=True).values_list('managed_tag', flat=True)
+        ret = CosinnusManagedTag.objects.get_cached(list(tag_ids))
+        print(ret)
+        return ret 
     
     def save(self, *args, **kwargs):
         created = bool(self.pk is None)
