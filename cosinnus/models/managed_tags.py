@@ -370,10 +370,10 @@ class CosinnusManagedTag(models.Model):
     def image_url(self):
         return self.image.url if self.image else None
     
-    def get_image_thumbnail(self, size=(500, 500)):
+    def get_image_thumbnail(self, size=(0, 80)):
         return image_thumbnail(self.image, size)
 
-    def get_image_thumbnail_url(self, size=(500, 500)):
+    def get_image_thumbnail_url(self, size=(0, 80)):
         return image_thumbnail_url(self.image, size)
     
     def get_absolute_url(self):
