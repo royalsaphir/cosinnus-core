@@ -73,6 +73,9 @@ module.exports = BaseView.extend({
         if (typeof json['sdgs'] === "number" || (typeof json['sdgs'] === "string" && json['sdgs'].length > 0)) {
             json['sdgs'] = json['sdgs'].toString().split(',');
         }
+        if (typeof json['managedTags'] === "number" || (typeof json['managedTags'] === "string" && json['managedTags'].length > 0)) {
+            json['managedTags'] = json['managedTags'].toString().split(',');
+        }
         return json;
     },
     

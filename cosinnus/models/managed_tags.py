@@ -13,7 +13,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.translation import ugettext_lazy as _
 import six
 
@@ -55,6 +55,12 @@ class CosinnusManagedTagLabels(object):
     MANAGED_TAG_FIELD_LEGEND_PROFILE = None
     # in the select list, this is the "none chosen" choice string
     MANAGED_TAG_FIELD_EMPTY_CHOICE = _('No Tag selected')
+    
+    @classmethod
+    def get_labels_dict(cls):
+        """ Returns a dict of all labels.
+            Note: lazy translation objects will be resolved here! """
+        return dict([(key, force_text(val)) for (key, val) in cls.__dict__.items() if not key.startswith('_')])
     
 
 # allow dropin of labels class
@@ -392,8 +398,12 @@ class CosinnusManagedTagAssignmentModelMixin(object):
         `managed_tag_assignments = GenericRelation('cosinnus.CosinnusManagedTagAssignment')` 
         to your model. """
     
+    def get_managed_tag_ids(self):
+        """ Returns all ids of approved assigned managed tags for this object """
+        return list(self.managed_tag_assignments.all().filter(approved=True).values_list('managed_tag', flat=True))
+    
     def get_managed_tags(self):
-        """ Returns all managed tags approved for this profile """
-        tag_ids = self.managed_tag_assignments.all().filter(approved=True).values_list('managed_tag', flat=True)
+        """ Returns all approved assigned managed tags for this object """
+        tag_ids = self.get_managed_tag_ids()
         return CosinnusManagedTag.objects.get_cached(list(tag_ids))
 
