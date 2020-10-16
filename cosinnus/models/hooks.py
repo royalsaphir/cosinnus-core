@@ -30,7 +30,8 @@ from cosinnus.utils.dashboard import ensure_group_widget
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus.utils.user import assign_user_to_default_auth_group, \
     ensure_user_to_default_portal_groups
-from cosinnus.models.managed_tags import CosinnusManagedTagAssignment
+from cosinnus.models.managed_tags import CosinnusManagedTagAssignment,\
+    CosinnusManagedTag
 from cosinnus.models.group_extra import ensure_group_type
 
 logger = logging.getLogger('cosinnus')
@@ -323,7 +324,17 @@ def managed_tag_assignment_update(sender, instance, created=False, **kwargs):
             target_object.update_index()
     except Exception as e:
         logger.exception(e)
+        
 
+@receiver(post_save, sender=CosinnusManagedTag)
+@receiver(post_delete, sender=CosinnusManagedTag)
+def managed_tag_cache_clear_triggers(sender, instance, created=False, **kwargs):
+    """ Clears the cache for tags when saved/deleted """
+    try:
+        CosinnusManagedTag.objects.clear_cache()
+    except Exception as e:
+        logger.exception(e)
+        
 
 from cosinnus.apis.cleverreach import * # noqa
 from cosinnus.models.wagtail_models import *  # noqa

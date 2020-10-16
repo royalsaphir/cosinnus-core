@@ -1106,7 +1106,7 @@ def render_cosinnus_topics_json():
 @register.simple_tag()
 def render_managed_tags_json():
     """ Returns all managed tags as JSON array of objects"""
-    all_managed_tags = CosinnusManagedTag.objects.all_in_portal()
+    all_managed_tags = CosinnusManagedTag.objects.all_in_portal_cached()
     managed_tags_json = [
         {
             'id': tag.id,
