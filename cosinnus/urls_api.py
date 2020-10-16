@@ -15,7 +15,7 @@ urlpatterns = api_patterns(1, None, False,
     url(r'^logout/$', user.logout_api, name='logout'),
     
     url(r'^statistics/general/$', StatisticsView.as_view(),  name='statistics-general'),
-    url(r'^statistics/general/managed_tag/(?P<slug>[^/]+)/$', StatisticsManagedTagFilteredView.as_view(),  name='statistics-general'),
+    url(r'^statistics/general/managed_tag/(?P<slug>[^/]+)/$', StatisticsManagedTagFilteredView.as_view(),  name='statistics-general-managed-tags'),
     url(r'^user/me/$', user.user_api_me,  name='user-api-me'),
     url(r'^common/get-metadata/$', common.get_metadata_from_url,  name='api-get-metadata'),
 )
