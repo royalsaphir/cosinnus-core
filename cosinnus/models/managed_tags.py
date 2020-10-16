@@ -21,6 +21,7 @@ from cosinnus.conf import settings
 from cosinnus.utils.files import get_managed_tag_image_filename, image_thumbnail, \
     image_thumbnail_url
 from cosinnus.utils.functions import clean_single_line_text, resolve_class
+from django.urls.base import reverse
 
 
 logger = logging.getLogger('cosinnus')
@@ -304,8 +305,7 @@ class CosinnusManagedTag(models.Model):
     
     def get_search_url(self):
         """ Returns the filtered search view for this tag """
-        # todo
-        return '???'
+        return reverse('cosinnus:map') + f'?managed_tags={self.id}'
     
 
 class CosinnusManagedTagAssignmentModelMixin(object):

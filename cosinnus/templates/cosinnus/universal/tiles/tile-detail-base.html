@@ -114,8 +114,8 @@
 		                {% for managed_tag in controlView.allManagedTags %}
 		                    {% if managed_tag_id == managed_tag.id %}
 		                        <a class="managed-tag-filter-link" data-managed-tag-id="{{ managed_tag_id }}">
-		                          {{ managed_tag.name }}
-		                        </a>{% if managed_tag.url %}
+		                          {{ managed_tag.name }}</a>
+		                          {% if managed_tag.url %}
 		                            <a target="_blank" href="{{ managed_tag.url }}">
 				                        (<i class="fa fa-external-link"></i>
 				                        {# Translators: __INCLUDE_JS_PO__ #}

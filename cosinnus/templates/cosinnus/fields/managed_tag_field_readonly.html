@@ -11,9 +11,14 @@
 	    </div>  
 	    <div>
 	        <p class="transparent forms-managed-tags detail-name">
-	            <a target="_blank" {% if tag.get_absolute_url %}href="{{ tag.get_absolute_url}}"{% else %}disabled{% endif %}>
-	                {{ tag.name }}
-	            </a>
+	            <a target="_blank" href="{{ tag.get_search_url }}">
+	                {{ tag.name }}</a>
+	            {% if tag.get_absolute_url %}
+		            <a target="_blank" href="{{ tag.get_absolute_url}}">
+	                    (<i class="fa fa-external-link"></i>
+	                    {% trans "website" %})
+	                </a>
+                {% endif %}
 	        </p>
 	        {% if tag.description %}
 	            <p class="transparent forms-managed-tags detail-description">
