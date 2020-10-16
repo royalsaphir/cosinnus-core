@@ -1247,7 +1247,7 @@ module.exports = ContentControlView.extend({
             searchResultLimit: util.ifundef(urlParams.limit, this.state.searchResultLimit),
             activeTopicIds: util.ifundef(urlParams.topics, this.state.activeTopicIds),
             activeSDGIds: util.ifundef(urlParams.sdgs, this.state.activeSDGIds),
-            activeManagedTagsIds: util.ifundef(urlParams.managedTags, this.state.activeManagedTagsIds),
+            activeManagedTagsIds: util.ifundef(urlParams.managed_tags, this.state.activeManagedTagsIds),
             pageIndex: util.ifundef(urlParams.page, this.state.pageIndex),
             urlSelectedResultId: util.ifundef(urlParams.item, this.state.urlSelectedResultId),
         });
@@ -1293,7 +1293,7 @@ module.exports = ContentControlView.extend({
         }
         if (this.state.activeManagedTagsIds.length > 0) {
             _.extend(searchParams, {
-                managedTags: this.state.activeManagedTagsIds.join(',')
+                managed_tags: this.state.activeManagedTagsIds.join(',')
             });
         }
         if (this.state.pageIndex > 0) {
@@ -1384,11 +1384,6 @@ module.exports = ContentControlView.extend({
             var bid = parseInt($button.attr('data-topic-id'));
             self.state.activeTopicIds.push(bid);
         });
-        // if we select all topics, drop the filter (select all is default). 
-        // -1 because allTopics contains the empty choice
-        if (self.state.activeTopicIds.length >= Object.keys(self.options.allTopics).length-1) {
-            self.resetTopics();
-        }
 
         // SDGs
         self.resetSDGS();
@@ -1397,11 +1392,6 @@ module.exports = ContentControlView.extend({
             var bid = parseInt($button.attr('data-sdg-id'));
             self.state.activeSDGIds.push(bid);
         });
-        // if we select all sdgs, drop the filter (select all is default). 
-        // -1 because allSDGs contains the empty choice
-        if (self.state.activeSDGIds.length >= Object.keys(self.options.allSDGS).length-1) {
-            self.resetSDGS();
-        }
         
         // ManagedTags
         self.resetManagedTags();
@@ -1410,11 +1400,6 @@ module.exports = ContentControlView.extend({
             var bid = parseInt($button.attr('data-managed-tag-id'));
             self.state.activeManagedTagsIds.push(bid);
         });
-        // if we select all managed tags, drop the filter (select all is default). 
-        // -1 because allManagedTags contains the empty choice
-        if (self.state.activeManagedTagsIds.length >= Object.keys(self.options.allManagedTags).length-1) {
-            self.resetManagedTags();
-        }
     },
 
     // TODO REMOVE
