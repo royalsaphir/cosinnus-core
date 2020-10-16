@@ -28,7 +28,7 @@ class CosinnusGroupIndexMixin(LocalCachedIndexMixin, DocumentBoostMixin, StoredD
     
     portal = indexes.IntegerField(model_attr='portal_id')
     group_members = indexes.MultiValueField(indexed=False)
-    sdgs = indexes.MultiValueField(model_attr='sdgs')
+    sdgs = indexes.MultiValueField(model_attr='sdgs', null=True)
     managed_tags = indexes.MultiValueField()
     public = indexes.BooleanField(model_attr='public')
     always_visible = indexes.BooleanField(default=True)
