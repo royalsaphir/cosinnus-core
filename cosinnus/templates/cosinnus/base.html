@@ -36,7 +36,10 @@
 	        <link href="{% static 'css/vendor/font-awesome-5/css/all.css' %}" rel="stylesheet"><!-- fa5 -->
 	        <link href="{% static 'css/vendor/font-awesome.min.css' %}" rel="stylesheet"><!-- fa4 -->
 	        <link href="{% static 'css/vendor/select2.css' %}" rel="stylesheet">
+	        {% comment %}  
 	        <link href="{% static 'css/vendor/fullcalendar.css' %}" rel="stylesheet">
+	        {% endcomment %}
+            <link href="{% static 'css/vendor/fullcalendar/main.min.css' %}" rel="stylesheet">
 	        <link href="{% static 'css/vendor/lightbox.css' %}" rel="stylesheet">
             <link href="{% static 'css/vendor/simplebar.css' %}" rel="stylesheet">
 	        {% if SETTINGS.DEBUG or request.GET.live_less_compile == "1" %}
@@ -57,7 +60,10 @@
 
         {% block jshead %}
 	        <script src="{% static 'js/vendor/select2.min.js' %}"></script>
+	        {% comment %}  
 	        <script src="{% static 'js/vendor/fullcalendar.min.js' %}"></script>
+	        {% endcomment %}
+            <script src="{% static 'js/vendor/fullcalendar/main.min.js' %}"></script>
 	        <script src="{% static 'js/vendor/jquery.sortElements.js' %}"></script>
 	        <script src="{% static 'js/vendor/moment-with-langs.min.js' %}"></script>
 	        <script src="{% static 'js/vendor/jquery.ui.widget.js' %}"></script>
