@@ -225,11 +225,15 @@
 
             if ($('.big-calendar').length && typeof(cosinnus_calendarEvents) !== "undefined") {
                 $('.big-calendar').empty();
-                $('.big-calendar').fullCalendar($.extend({
-                    header: {
+                
+                var dateFormat = {};
+                //dateFormat = $.cosinnus.fullcalendar_format;
+                var calendar = new FullCalendar.Calendar($('.big-calendar')[0], $.extend({
+                    // see docs for toolbar: https://fullcalendar.io/docs/list-view
+                    headerToolbar: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'year,month,basicWeek,week' // basicDay
+                        right: 'listWeek,resourceTimeline,dayGridMonth,timeGridWeek' // basicDay
                     },
     
                     // cosinnus_calendarEvents is a global var containing the events
@@ -246,13 +250,20 @@
                             .trigger('fullCalendarEventClick',[event, jsEvent, view]);
                     },
                     selectable: true,
-                    selectHelper: true
-                }, $.cosinnus.fullcalendar_format));
+                    selectHelper: true,
+                    schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+                }, dateFormat));
+                calendar.render();
+                
+                //$('.big-calendar').fullCalendar();
             }
             
             if ($('.small-calendar').length) {
                 $('.small-calendar').empty();
-                $('.small-calendar').fullCalendar($.extend({
+                
+                var dateFormat = {};
+                //dateFormat = $.cosinnus.fullcalendar_format;
+                var calendar = new FullCalendar.Calendar($('.small-calendar')[0], $.extend({
                     header: {
                         left: 'prev',
                         center: 'title',
@@ -267,7 +278,7 @@
                         $(cell).closest('.small-calendar').trigger('fullCalendarViewRender',[cell]);
                     }
     
-                }, $.cosinnus.fullcalendar_format));
+                }, dateFormat));
             }
         },
 
