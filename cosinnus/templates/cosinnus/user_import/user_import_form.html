@@ -1,0 +1,139 @@
+{% extends "cosinnus/base.html" %}
+{% load i18n cosinnus_tags cosinnus_map_tags static thumbnail %}
+
+{% block page_title %}{{ group.name }} {{ block.super }}{% endblock page_title %}
+
+{% block leftnav %}
+    {% include "cosinnus/user_import/leftnav.html"  with current_page="import" %}
+{% endblock leftnav %}
+
+{% block breadcrumb %}
+{% endblock %}
+
+{% block content %}
+
+   <div class="content-box">
+        <h1>FormView: {{ form_view }}</h2>
+	    
+        {% trans "Delete uploaded data and upload a new CSV file" as reset_button_label %}
+	
+        {% if form_view == "import-ready" or form_view == "invalid" %}
+	        <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <input type="hidden" name="action" value="scrap" />
+                
+				<button type="submit" class="btn btn-emphasized btn-autosize">
+				    <ul class="media-list">
+				        <li class="media">
+				            <a class="pull-left" href="#">
+				                <i class="fa fa-upload"></i>
+				            </a>
+				            <div class="media-body">
+				                {{ reset_button_label }}
+				            </div>
+				        </li>
+				    </ul>
+				</button>
+            </form>
+	    {% endif %}
+	
+		<form action="" method="post" enctype="multipart/form-data">
+		    {% csrf_token %}
+            {{ form.non_field_errors }}
+		    
+		    {% if form_view == "upload" %}
+		        <h2>{% trans "Upload a user CSV file to import user profiles" %}</h2>
+			    <p>
+			        {% trans "Please upload a CSV with the following columns (in any order)" %}:
+			        {{ required_columns }}
+		        </p>
+		        {% for field in form %}
+			        <div class="cosinnus-field">
+			            {% include 'cosinnus/fields/default_field.html' with field=field %}
+			        </div>
+		        {% endfor %}
+		        <p>
+                    {% trans "No data will be imported at this point." %}
+                    {% trans "The uploaded file will be validated and a report of the data it contains will be shown." %}
+                    {% trans "You can then start the import from the report page." %}
+                </p>
+                <input type="hidden" name="action" value="upload" />
+                {% trans "Upload CSV File" as submit_button_label %}
+				
+			{% elif form_view == "dry-run-running" or form_view == "import-running" %}
+			    {% if form_view == "dry-run-running" %}
+                    <h2>{% trans "The CSV is currently being validated..." %}</h2>
+                {% endif %}
+                {% if form_view == "dry-run-running" %}
+                    <h2>{% trans "The import is currently running..." %}</h2>
+                {% endif %}
+                
+			    <p>{% trans "This page will automatically refresh when the process is done." %}</p>
+			    {% comment %} Refresh every 10 seconds {% endcomment %}
+			    <script type="text/javascript">
+				    setTimeout(function () { location.reload(); }, 10000);
+				</script>
+	        
+	        {% elif form_view == "import-ready" %}
+	            <h2>{% trans "The uploaded data is valid - please review before importing!" %}</h2>
+                <input type="hidden" name="action" value="import" />
+                {% trans "Import the shown data now" as submit_button_label %}
+                
+                <p>
+                    {% trans "The uploaded data is valid and is ready to be imported." %}
+                    {% trans "Please review the data carefully below. Everything that will be imported is shown in the table." %}
+                </p>
+                <p>
+                    <b>{% trans "If any data is missing in the report, that you think should be included in the import, please do not start the import yet!" %}</b>
+                    {% trans "Rather review the uploaded CSV, and if the data is contained there, but not in the report, please contact the support!" %}
+                </p>
+                <p>
+                    {% blocktrans with submit_button_label=submit_button_label %}Once you are ready to begin the import, please click "{{ submit_button_label }}" at the bottom of the page.{% endblocktrans %}
+                </p>
+                
+            {% elif form_view == "invalid" %}
+                <h2>{% trans "The uploaded data is invalid" %}</h2>
+                <p>
+                    {% trans "No data has been imported yet." %}
+                    {% trans "Please review the errors encountered, and correct them in the CSV. If you have questions, contact our support for help." %}
+                    {% blocktrans with submit_button_label=submit_button_label %}Click "{{ reset_button_label }}" at the top of the page to start another upload.{% endblocktrans %}
+                </p>
+                
+	        
+	        {% elif form_view == "finished" %}
+                <input type="hidden" name="action" value="archive" />
+                {% trans "Archive Import Report" as submit_button_label %}
+                
+                <h2>{% trans "The uploaded data has been successfully imported!" %}</h2>
+                <p>
+                    {% trans "Below you will find a report of everything that was imported." %}
+                    {% blocktrans with submit_button_label=submit_button_label %}Click "{{ submit_button_label }}" to archive the report. You can access the report later from the left side navigation of this page.{% endblocktrans %}
+                </p>
+			{% endif %}
+			
+			
+			{% if form_view == "import-ready" or form_view == "invalid" or form_view == "finished" %}
+                {% include 'cosinnus/user_import/user_import_report_snippet.html' with object=object %}
+			{% endif %}
+		
+		
+			 <button type="submit" class="btn btn-emphasized btn-autosize">
+	            <ul class="media-list">
+	                <li class="media">
+	                    <a class="pull-left" href="#">
+	                        <i class="fa fa-upload"></i>
+	                    </a>
+	                    <div class="media-body">
+	                        {{ submit_button_label }}
+	                    </div>
+	                </li>
+	            </ul>
+	        </button>
+			
+		</form>
+		
+	</div>
+	
+{% endblock content %}
+

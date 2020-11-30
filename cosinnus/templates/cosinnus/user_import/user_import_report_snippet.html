@@ -1,0 +1,13 @@
+{% extends "cosinnus/base.html" %}
+{% load i18n cosinnus_tags cosinnus_map_tags static thumbnail %}
+
+<h1> html snippet for import done by {{ report.creator }}</h1>
+
+<h2>
+    {% trans "Created" %}:
+    <span class="moment-data-date" data-date="{{ object.last_modified|date:'c' }}" title="{{ object.last_modified|date:'r' }}"></span>
+</h2>
+
+<div class="user-import-report">
+    {{ object.import_report_html|safe }}
+</div>
