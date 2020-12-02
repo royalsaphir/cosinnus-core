@@ -6,14 +6,7 @@ import io
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-
-
-# lower case list of all column names known and used for the import
-KNOWN_CSV_IMPORT_COLUMNS_HEADERS = [
-    'test',
-    'aah',
-]
-REQUIRED_CSV_IMPORT_COLUMN_HEADERS = KNOWN_CSV_IMPORT_COLUMNS_HEADERS
+from cosinnus.models.user_import import CosinnusUserImportProcessor
 
 
 class CosinusUserImportCSVForm(forms.Form):
@@ -29,7 +22,7 @@ class CosinusUserImportCSVForm(forms.Form):
         
         # check if all required columns are in the CSV
         missing_headers = []
-        for required_column_name in REQUIRED_CSV_IMPORT_COLUMN_HEADERS:
+        for required_column_name in CosinnusUserImportProcessor.REQUIRED_CSV_IMPORT_COLUMN_HEADERS:
             if required_column_name.lower().strip() not in processed_header:
                 missing_headers.append(required_column_name)
         if missing_headers:    
@@ -87,7 +80,7 @@ class CosinusUserImportCSVForm(forms.Form):
     
     def make_data_dict_list(self, header, rows):
         """ Makes a datadict, combining the headers with each row, ignoring any columns not found in KNOWN_CSV_IMPORT_COLUMNS_HEADERS """ 
-        lowercase_known_columns = [col.lower().strip() for col in KNOWN_CSV_IMPORT_COLUMNS_HEADERS]
+        lowercase_known_columns = [col.lower().strip() for col in CosinnusUserImportProcessor.KNOWN_CSV_IMPORT_COLUMNS_HEADERS]
         data_dict_list = []
         ignored_columns = []
         for row in rows:

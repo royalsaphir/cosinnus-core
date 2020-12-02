@@ -1,46 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.contrib.contenttypes.models import ContentType
+import logging
+
 from django.contrib import messages
-from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Q
-from django.http import HttpResponseRedirect
-from django.utils import timezone
-from django.views.generic.edit import CreateView, FormView, UpdateView
-from django.views.generic.list import ListView
-from cosinnus.utils.permissions import check_user_superuser
-from django.core.exceptions import PermissionDenied
-from django.views.generic.base import TemplateView, View
-from cosinnus.forms.administration import (UserWelcomeEmailForm,
-NewsletterForManagedTagsForm, UserAdminForm)
-from cosinnus.models.group import CosinnusPortal
-from cosinnus.models.newsletter import Newsletter
-from django.urls.base import reverse
-from cosinnus.views.user import _send_user_welcome_email_if_enabled
 from django.shortcuts import redirect
-from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth import get_user_model
-
-from cosinnus.views.profile import UserProfileUpdateView
-from cosinnus.templatetags.cosinnus_tags import textfield
-from cosinnus.utils.permissions import check_user_can_receive_emails
-from cosinnus.utils.html import render_html_with_variables
-from cosinnus.core.mail import send_html_mail_threaded
-from cosinnus.models.group import CosinnusGroup
-from cosinnus.models.managed_tags import CosinnusManagedTagAssignment
-from cosinnus.views.user import email_first_login_token_to_user
-from cosinnus.models.user_import import CosinnusUserImport
-from cosinnus.views.mixins.group import RequireSuperuserMixin
-from cosinnus.conf import settings
-
-from django.db.models import Q
-import logging
-from sphinx.ext.autodoc.importer import import_object
-from cosinnus.forms.user_import import CosinusUserImportCSVForm
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+
+from cosinnus.conf import settings
+from cosinnus.models.user_import import CosinnusUserImport,\
+    CosinnusUserImportProcessor
+from cosinnus.forms.user_import import CosinusUserImportCSVForm
+from cosinnus.views.mixins.group import RequireSuperuserMixin
+
 
 logger = logging.getLogger('cosinnus')
 
@@ -103,6 +79,8 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
                 self.form_view = 'import-ready'
             elif self.import_object.state == CosinnusUserImport.STATE_IMPORT_FINISHED:
                 self.form_view = 'finished'
+            elif self.import_object.state == CosinnusUserImport.STATE_IMPORT_FAILED:
+                self.form_view = 'failed'
     
     def get(self, request, *args, **kwargs):
         self.get_current_import_object()
@@ -156,18 +134,18 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
         if form.is_valid():
             print(f'>>> form valid!')
             csv_data = form.cleaned_data.get('csv')
-            report_html = ''
             ignored_columns = csv_data['ignored_columns']
-            if ignored_columns:
-                report_html += f'<div class="warning">{_("The following columns were not recognized and were ignoried")}: {"".join(ignored_columns)}</div>'
             
-            CosinnusUserImport.objects.create(
+            import_object = CosinnusUserImport(
                 creator=self.request.user,
                 state=CosinnusUserImport.STATE_DRY_RUN_RUNNING,
                 import_data=csv_data['data_dict_list'],
-                import_report_html=report_html
             )
-            # TODO: IMPORTER.start-dry-run threaded
+            if ignored_columns:
+                import_object.append_to_report(str(_("The following columns were not recognized and were ignored") + ": " + "".join(ignored_columns)), "warning")
+            import_object.save()
+            # start-dry-run threaded
+            CosinnusUserImportProcessor().do_import(import_object, dry_run=True)
             messages.success(self.request, _('The uploaded CSV is being validated.'))
         else:
             print(f'>>> formerorrs {self.form.errors}')
@@ -175,10 +153,9 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
             
             
     def do_start_import_from_dryrun(self, import_object):
-        # do a non-dry-run import from the object
-        import_object.state = CosinnusUserImport.STATE_IMPORT_RUNNING
-        import_object.save()
-        # TODO: IMPORTER.start-real-run threaded
+        # start import threaded from the object
+        import_object.clear_report()
+        CosinnusUserImportProcessor().do_import(import_object, dry_run=True)
         messages.success(self.request, _('The import was started.'))
     
     def do_archive_import(self, import_object):

@@ -660,6 +660,10 @@ class CosinnusConf(AppConf):
     # they require a per-portal implementation of the importer class
     USER_IMPORT_ADMINISTRATION_VIEWS_ENABLED = False
     
+    # a class dropin to replace CosinnusUserImportProcessorBase as user import processor
+    # (str classpath)
+    USER_IMPORT_PROCESSOR_CLASS_DROPIN = None
+    
     # if true, during signup and in the user profile, an additional
     # opt-in checkbox will be shown to let the user choose if they wish to 
     # receive a newsletter

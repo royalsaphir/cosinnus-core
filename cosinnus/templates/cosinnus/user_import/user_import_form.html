@@ -17,7 +17,7 @@
 	    
         {% trans "Delete uploaded data and upload a new CSV file" as reset_button_label %}
 	
-        {% if form_view == "import-ready" or form_view == "invalid" %}
+        {% if form_view == "import-ready" or form_view == "invalid" or form_view == "failed" %}
 	        <form action="" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 
@@ -97,6 +97,13 @@
                 <p>
                     {% trans "No data has been imported yet." %}
                     {% trans "Please review the errors encountered, and correct them in the CSV. If you have questions, contact our support for help." %}
+                    {% blocktrans with submit_button_label=submit_button_label %}Click "{{ reset_button_label }}" at the top of the page to start another upload.{% endblocktrans %}
+                </p>
+                
+            {% elif form_view == "failed" %}
+                <h2>{% trans "There was an unexpected error during the import" %}</h2>
+                <p>
+                    {% trans "No data has been imported yet." %}
                     {% blocktrans with submit_button_label=submit_button_label %}Click "{{ reset_button_label }}" at the top of the page to start another upload.{% endblocktrans %}
                 </p>
                 
