@@ -15,6 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from cosinnus.conf import settings
 from cosinnus.utils.functions import resolve_class
 import logging
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger('cosinnus')
 
@@ -85,6 +86,7 @@ class CosinnusUserImport(models.Model):
     import_report_html = models.TextField(verbose_name=_('Import Report HTML'),
        help_text='Stores the generated report for what the import will do / has done.', blank=True)
     
+    user_report_items = None
     
     class Meta(object):
         ordering = ('-last_modified',)
@@ -92,6 +94,7 @@ class CosinnusUserImport(models.Model):
         verbose_name_plural = _('Cosinnus User Imports')
 
     def __init__(self, *args, **kwargs):
+        self.user_report_items = []
         super(CosinnusUserImport, self).__init__(*args, **kwargs)
 
     def __str__(self):
@@ -102,19 +105,21 @@ class CosinnusUserImport(models.Model):
             @param report_class: a str class. can be "error", "warning", "info" (default) or custom  """
         self.import_report_html += self.make_report_item(text, report_class).to_string()
     
-    def make_user_report_container(self, report_items=None, report_class="info"):
-        """ Makes a user report container item that can contain any number of report_items.
+    def make_user_report_container(self, header_text, report_class="info"):
+        """ Makes a user report container item from all accrued `self.user_report_items`.
             Will add symbol markers of any of the contained items' error classes
             @param report_items: None or a list """
-        report_items = report_items or []
-        item_classes = list(set([item.report_class for item in report_items]))
-        report_item_str = "".join([item.to_string() for item in report_items])
-        return f'<div class="user-report {report_class}"><h3>TODO: Make accordion and add symbols for classes:{item_classes}</hh3>{report_item_str}</div>'
+        item_classes = list(set([item.report_class for item in self.user_report_items]))
+        report_item_str = "".join([item.to_string() for item in self.user_report_items])
+        return f'<div class="user-report {report_class}"><h1>{header_text}</h1><h3>TODO: Make accordion and add symbols for classes:{item_classes}</hh3>{report_item_str}</div>'
     
-    def make_report_item(self, text, report_class="info"):
+    def add_user_report_item(self, text, report_class="info"):
         """ Makes a report item.
             @param report_class: a str class. can be "error", "warning", "info" (default) or custom """
-        return CosinnusUserImportReportItems(text, report_class)
+        self.user_report_items.append(CosinnusUserImportReportItems(text, report_class))
+        
+    def clear_user_report_items(self):
+        self.user_report_items = []
     
     def clear_report(self):
         self.import_report_html = ""
@@ -172,23 +177,71 @@ class CosinnusUserImportProcessorBase(object):
     
     def _start_import(self, user_import_item, dry_run=True):
         """ Baseline implementation for a very simple user import  """
+        import_failed_overall = False
         try:
-            for 
+            for item_data in user_import_item.import_data:
+                # clear user item reports
+                user_import_item.clear_user_report_items()
+                import_successful = self._do_single_user_import(item_data, user_import_item, dry_run=dry_run)
+                report_class = "info" if import_successful else "error"
+                user_import_item.make_user_report_container(self.get_user_report_title(item_data), report_class)
+                
+                # instantly fail a real import when a single user could not be imported. this should have been
+                # caught by the dry-run validation (which wouldve disabled the real import), or hints at a serious
+                # relational problem that should be looked into
+                if not import_successful:
+                    import_failed_overall = True
+                    if not dry_run:
+                        # prepend the error message
+                        user_import_item.import_report_html = user_import_item.make_report_item(
+                            _("Import for a user item has failed, cancelling the import process! TODO: has data been written?"), 
+                            "error"
+                            ).to_string() + user_import_item.import_report_html
+                        break
+                    
+                
         except Exception as e:
             # if this outside exception happens, the import will be declared as "no data has been imported" and the errors will be shown
             logger.error(f'User Import: Critical failure during import (dry-run: {dry_run})', extra={'exception': e})
             if settings.DEBUG:
                 raise e
-            if dry_run:
-                user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_FINISHED_INVALID
-            else:
-                user_import_item.state = CosinnusUserImport.STATE_IMPORT_FAILED
+            import_failed_overall = True
             # prepend the error message
             user_import_item.import_report_html = user_import_item.make_report_item(
                 _("An unexpected system error has occured while processing the data. This should not have happened. Please contact the support!"), 
                 "error"
                 ).to_string() + user_import_item.import_report_html
+                
+        if import_failed_overall:
+            if dry_run:
+                user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_FINISHED_INVALID
+            else:
+                user_import_item.state = CosinnusUserImport.STATE_IMPORT_FAILED
             user_import_item.save()
+            
+    def _do_single_user_import(self, item_data, user_import_item, dry_run=True):
+        """ Main import function for a single user data object.
+            During this, user_item_reports should be accrued for the item
+            @param item_data: A dict object containing keys corresponding to `KNOWN_CSV_IMPORT_COLUMNS_HEADERS` and the row data for one user
+            @return: A django.auth.User object if successful, None if not """
+        user = self._import_create_auth_user(self, item_data, user_import_item, dry_run=dry_run)
+        if user is not None:
+            return True
+        return False
+        
+    
+    def _import_create_auth_user(self, item_data, user_import_item, dry_run=True):
+        """ Create a user object from import """
+        user = get_user_model()(
+            # TODO
+        )
+        if False:
+            return False
+        return user
+    
+    def get_user_report_title(self, item_data):
+        return item_data.get('first_name', '<no-name>') + ' ' + item_data.get('email', '<no-email>')
+        
         
 
 # allow dropin of labels class
