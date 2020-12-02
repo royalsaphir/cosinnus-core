@@ -103,15 +103,16 @@ class CosinnusUserImport(models.Model):
     def append_to_report(self, text, report_class="info"):
         """ Adds a report text to the current report
             @param report_class: a str class. can be "error", "warning", "info" (default) or custom  """
-        self.import_report_html += self.make_report_item(text, report_class).to_string()
+        self.import_report_html += CosinnusUserImportReportItems(text, report_class).to_string()
     
-    def make_user_report_container(self, header_text, report_class="info"):
+    def generate_and_append_user_report(self, header_text, report_class="info"):
         """ Makes a user report container item from all accrued `self.user_report_items`.
             Will add symbol markers of any of the contained items' error classes
             @param report_items: None or a list """
         item_classes = list(set([item.report_class for item in self.user_report_items]))
         report_item_str = "".join([item.to_string() for item in self.user_report_items])
-        return f'<div class="user-report {report_class}"><h1>{header_text}</h1><h3>TODO: Make accordion and add symbols for classes:{item_classes}</hh3>{report_item_str}</div>'
+        self.import_report_html += f'<div class="user-report {report_class}"><h1>{header_text}</h1><h3>TODO: Make accordion and add symbols for classes:{item_classes}</hh3>{report_item_str}</div>'
+        self.clear_user_report_items()
     
     def add_user_report_item(self, text, report_class="info"):
         """ Makes a report item.
@@ -130,36 +131,51 @@ class CosinnusUserImport(models.Model):
             created = bool(self.pk is None)
             existing_imports = CosinnusUserImport.objects.exclude(state=CosinnusUserImport.STATE_ARCHIVED)
             if not created:
-                existing_imports.exclude(id=self.id)
+                existing_imports = existing_imports.exclude(id=self.id)
             if existing_imports.count() > 0:
                 raise Exception('CosinnusUserImport: Could not save import object because state check failed: there is another import that is not archived.')
         super(CosinnusUserImport, self).save(*args, **kwargs)
         
     def get_absolute_url(self):
-        return reverse('cosinnus:administration-archived-user-import', kwargs={'pk': self.import_object.id})
+        return reverse('cosinnus:administration-archived-user-import-detail', kwargs={'pk': self.id})
 
 
 class CosinnusUserImportProcessorBase(object):
     
+    # a mapping of column header names to user/userprofile/user-media-tag field names
+    # important: the keys are *ALWAYS* lower-case as the CSV importer will lower().strip() them!
+    CSV_HEADERS_TO_FIELD_MAP = {
+        'email': 'email',
+        'firstname': 'first_name',
+        'lastname':'last_name',
+    }
+    
     # lower case list of all column names known and used for the import
-    KNOWN_CSV_IMPORT_COLUMNS_HEADERS = [
-        'email',
-        'first_name',
-        'last_name',
-    ]
+    KNOWN_CSV_IMPORT_COLUMNS_HEADERS = CSV_HEADERS_TO_FIELD_MAP.keys()
     # required column headers to be present in the CSV data.
     # note: this does not mean the row data for this column is required, only the column should exist
     REQUIRED_CSV_IMPORT_COLUMN_HEADERS = KNOWN_CSV_IMPORT_COLUMNS_HEADERS
-    # row data for each csv entry that need to not be empty in order for the import of that row to be accepted
-    REQUIRED_ITEM_COLUMNS_FOR_IMPORT = [
+    # field names for csv entry row data that need to not be empty in order for the import of that row to be accepted
+    # these are the *FIELD NAMES*, not the CSV column headers! so this is from `CSV_HEADERS_TO_FIELD_MAP.values()`!
+    REQUIRED_FIELDS_FOR_IMPORT = [
         'email',
         'first_name',
     ]
+    # reverse map of CSV_HEADERS_TO_FIELD_MAP, initialized on init
+    field_name_map = None 
+    
+    
+    def __init__(self):
+        # init the reverse map here in case the header map gets changed in the cls 
+        self.field_name_map = dict([(val, key) for key, val in self.CSV_HEADERS_TO_FIELD_MAP.items()])
     
     def do_import(self, user_import_item, dry_run=True, threaded=True):
         """ Does a threaded user import, either as a dry-run or real one.
             Will update the import object's state when done or failed.
             @property user_import_item: class `CosinnusUserImport` containing import_data """
+        if settings.DEBUG:
+            threaded = False # never thread in dev
+            
         if dry_run:
             user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_RUNNING
         else:
@@ -182,9 +198,19 @@ class CosinnusUserImportProcessorBase(object):
             for item_data in user_import_item.import_data:
                 # clear user item reports
                 user_import_item.clear_user_report_items()
-                import_successful = self._do_single_user_import(item_data, user_import_item, dry_run=dry_run)
+                # sanity check: all absolutely required fields must exist:
+                missing_fields = [self.field_name_map[req_field] for req_field in self.REQUIRED_FIELDS_FOR_IMPORT if not item_data.get(self.field_name_map[req_field], None)]
+                if missing_fields:
+                    import_successful = False
+                    user_import_item.add_user_report_item(
+                            _('CSV row %(row_num)d was missing required data from columns: %(fields)s') % {'fields': ", ".join(missing_fields), 'row_num': item_data['ROW_NUM']},
+                            report_class="error"
+                        )
+                else:
+                    import_successful = self._do_single_user_import(item_data, user_import_item, dry_run=dry_run)
+                    
                 report_class = "info" if import_successful else "error"
-                user_import_item.make_user_report_container(self.get_user_report_title(item_data), report_class)
+                user_import_item.generate_and_append_user_report(self.get_user_report_title(item_data), report_class)
                 
                 # instantly fail a real import when a single user could not be imported. this should have been
                 # caught by the dry-run validation (which wouldve disabled the real import), or hints at a serious
@@ -193,7 +219,7 @@ class CosinnusUserImportProcessorBase(object):
                     import_failed_overall = True
                     if not dry_run:
                         # prepend the error message
-                        user_import_item.import_report_html = user_import_item.make_report_item(
+                        user_import_item.import_report_html = CosinnusUserImportReportItems(
                             _("Import for a user item has failed, cancelling the import process! TODO: has data been written?"), 
                             "error"
                             ).to_string() + user_import_item.import_report_html
@@ -203,44 +229,79 @@ class CosinnusUserImportProcessorBase(object):
         except Exception as e:
             # if this outside exception happens, the import will be declared as "no data has been imported" and the errors will be shown
             logger.error(f'User Import: Critical failure during import (dry-run: {dry_run})', extra={'exception': e})
-            if settings.DEBUG:
-                raise e
             import_failed_overall = True
             # prepend the error message
-            user_import_item.import_report_html = user_import_item.make_report_item(
+            user_import_item.import_report_html = CosinnusUserImportReportItems(
                 _("An unexpected system error has occured while processing the data. This should not have happened. Please contact the support!"), 
                 "error"
                 ).to_string() + user_import_item.import_report_html
-                
+            if settings.DEBUG:
+                if dry_run:
+                    user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_FINISHED_INVALID
+                else:
+                    user_import_item.state = CosinnusUserImport.STATE_IMPORT_FAILED
+                user_import_item.save()
+                raise e
+            
         if import_failed_overall:
             if dry_run:
                 user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_FINISHED_INVALID
             else:
                 user_import_item.state = CosinnusUserImport.STATE_IMPORT_FAILED
-            user_import_item.save()
+        else:
+            if dry_run:
+                user_import_item.state = CosinnusUserImport.STATE_DRY_RUN_FINISHED_VALID
+            else:
+                user_import_item.state = CosinnusUserImport.STATE_IMPORT_FINISHED 
+        user_import_item.save()
             
     def _do_single_user_import(self, item_data, user_import_item, dry_run=True):
         """ Main import function for a single user data object.
             During this, user_item_reports should be accrued for the item
             @param item_data: A dict object containing keys corresponding to `KNOWN_CSV_IMPORT_COLUMNS_HEADERS` and the row data for one user
             @return: A django.auth.User object if successful, None if not """
-        user = self._import_create_auth_user(self, item_data, user_import_item, dry_run=dry_run)
-        if user is not None:
-            return True
-        return False
+        user = self._import_create_auth_user(item_data, user_import_item, dry_run=dry_run)
+        if not user:
+            return False
+        return True
         
     
     def _import_create_auth_user(self, item_data, user_import_item, dry_run=True):
-        """ Create a user object from import """
-        user = get_user_model()(
-            # TODO
-        )
-        if False:
-            return False
+        """ Create a user object from import.
+            @return: None if not successful, else a auth user object """
+        # fields are in REQUIRED_FIELDS_FOR_IMPORT so we can assume they exist
+        email = item_data.get(self.field_name_map['email']) 
+        first_name = item_data.get(self.field_name_map['first_name']) 
+        last_name = item_data.get(self.field_name_map['last_name'], None) 
+        
+        email_exists = get_user_model().objects.filter(email__iexact=email).exists()
+        if email_exists:
+            user_import_item.add_user_report_item(_('This email-address already has an existing user account in the system!'), report_class="error")
+            return None
+        user_kwargs = {
+            'username': email,
+            'email': email,
+            'first_name': first_name,
+        }
+        if last_name:
+            user_kwargs['last_name'] = last_name
+        user = get_user_model()(**user_kwargs)
+        
+        if settings.DEBUG:
+            # TODO: fix for real applications
+            user.password = 'pwd123'
+            
+        if not dry_run:
+            user.save()
+            user.username = user.id
+            user.save()
+            
+        del user_kwargs['username']
+        user_import_item.add_user_report_item(str(_('New user account: ') + str(user_kwargs)), report_class="error")
         return user
     
     def get_user_report_title(self, item_data):
-        return item_data.get('first_name', '<no-name>') + ' ' + item_data.get('email', '<no-email>')
+        return item_data.get('first_name', '<no-name>') + ' ' + item_data.get('email', '<no-email>') + ' csv-row: #' + str(item_data['ROW_NUM'])
         
         
 

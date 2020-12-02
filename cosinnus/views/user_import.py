@@ -61,7 +61,7 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
     
     def redirect_with_error(self, message=None):
         message = message or _('This action is not allowed right now')
-        messages.error(self.request, message)
+        messages.error(self.request, message + ': ' + self.action)
         return redirect(self.redirect_view)
     
     def set_form_view(self):
@@ -91,7 +91,6 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
         self.get_current_import_object()
         self.set_form_view()
         self.action = self.request.POST.get('action', None)
-        print(f'>>>> FORM ACTION: {self.action}')
         #csv = self.request.POST.get()
         # do stuff
         
@@ -118,7 +117,7 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
             self.do_archive_import(self.import_object)
             return self.import_object.get_absolute_url()
         elif self.action == 'scrap':
-            if not self.import_object or self.import_object.state in \
+            if not self.import_object or not self.import_object.state in \
                     [CosinnusUserImport.STATE_DRY_RUN_FINISHED_INVALID, CosinnusUserImport.STATE_DRY_RUN_FINISHED_VALID]:
                 return self.redirect_with_error()
             self.import_object.delete()
@@ -132,7 +131,6 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
         form = CosinusUserImportCSVForm(files=self.request.FILES)
         setattr(self, 'form', form)
         if form.is_valid():
-            print(f'>>> form valid!')
             csv_data = form.cleaned_data.get('csv')
             ignored_columns = csv_data['ignored_columns']
             
@@ -146,17 +144,13 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
             import_object.save()
             # start-dry-run threaded
             CosinnusUserImportProcessor().do_import(import_object, dry_run=True)
-            messages.success(self.request, _('The uploaded CSV is being validated.'))
         else:
-            print(f'>>> formerorrs {self.form.errors}')
             return self.render_to_response(self.get_context_data())
-            
             
     def do_start_import_from_dryrun(self, import_object):
         # start import threaded from the object
         import_object.clear_report()
-        CosinnusUserImportProcessor().do_import(import_object, dry_run=True)
-        messages.success(self.request, _('The import was started.'))
+        CosinnusUserImportProcessor().do_import(import_object, dry_run=False)
     
     def do_archive_import(self, import_object):
         import_object.state = CosinnusUserImport.STATE_ARCHIVED
@@ -171,7 +165,6 @@ class CosinnusUserImportView(RequireSuperuserMixin, TemplateView):
             'required_columns': 'TODO: required_columns',
             'form': getattr(self, 'form', CosinusUserImportCSVForm())
         })
-        print(f'> CTXformerr {context["form"].errors}')
         return context
 
 user_import_view = CosinnusUserImportView.as_view()

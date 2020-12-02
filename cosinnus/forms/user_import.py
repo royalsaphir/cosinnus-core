@@ -33,8 +33,8 @@ class CosinusUserImportCSVForm(forms.Form):
         for i, row in enumerate(rows):
             if len(row) != len(processed_header):
                 mismatched_rows.append(i)
-        if mismatched_rows:    
-            raise forms.ValidationError(_(f'Rows on these line numbers did not have the same number of items as the header ({len(processed_header)}): {mismatched_rows}!'))
+        if mismatched_rows:
+            raise forms.ValidationError(_(f'Rows on these line numbers did not have the same number of items ({len(processed_header)}) as the header: {", ".join(mismatched_rows)}!'))
         
         # make a datadict, combining the headers with each row, ignoring any columns not found in KNOWN_CSV_IMPORT_COLUMNS_HEADERS
         data_dict_list, ignored_columns = self.make_data_dict_list(processed_header, rows)
@@ -62,7 +62,8 @@ class CosinusUserImportCSVForm(forms.Form):
         data = []
         for row in reader:
             cleaned_row = self.clean_row_data(row)
-            data.append(cleaned_row)
+            if row:
+                data.append(cleaned_row)
         return data
 
     def process_csv(self, csv_file):
@@ -80,20 +81,21 @@ class CosinusUserImportCSVForm(forms.Form):
     
     def make_data_dict_list(self, header, rows):
         """ Makes a datadict, combining the headers with each row, ignoring any columns not found in KNOWN_CSV_IMPORT_COLUMNS_HEADERS """ 
-        lowercase_known_columns = [col.lower().strip() for col in CosinnusUserImportProcessor.KNOWN_CSV_IMPORT_COLUMNS_HEADERS]
+        lowercase_known_columns = [col.strip().lower() for col in CosinnusUserImportProcessor.KNOWN_CSV_IMPORT_COLUMNS_HEADERS]
         data_dict_list = []
         ignored_columns = []
-        for row in rows:
-            data_item = {}
-            for i, column_name in header:
+        for row_counter, row in enumerate(rows):
+            # add a row counter
+            data_item = {'ROW_NUM': row_counter+1}
+            for i, column_name in enumerate(header):
                 # skip unknown columns
-                column_name = column_name.strip.lower()
-                if column_name not in lowercase_known_columns:
+                column_name = column_name.strip()
+                if column_name.lower() not in lowercase_known_columns:
                     if not column_name in ignored_columns:
                         ignored_columns.append(column_name)
                     continue
                 data_item[column_name] = row[i]
-            data_dict_list.append(data_dict_list)
+            data_dict_list.append(data_item)
         return data_dict_list, ignored_columns
     
     def clean_row_data(self, row):

@@ -695,6 +695,7 @@ admin.site.register(CosinnusManagedTagAssignment, CosinnusManagedTagAssignmentAd
 
 class CosinnusUserImportAdmin(admin.ModelAdmin):
     list_display = ('state', 'creator', 'last_modified')
+    readonly_fields = ('import_data', 'import_report_html')
 
 admin.site.register(CosinnusUserImport, CosinnusUserImportAdmin)
 
