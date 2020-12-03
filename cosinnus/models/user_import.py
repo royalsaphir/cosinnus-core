@@ -176,12 +176,16 @@ class CosinnusUserImportProcessorBase(object):
         'first_name',
     ]
     # reverse map of CSV_HEADERS_TO_FIELD_MAP, initialized on init
-    field_name_map = None 
+    field_name_map = None # dict
+    
+    # a list of django.auth.Users created already during the run
+    created_users = None # dict
     
     
     def __init__(self):
         # init the reverse map here in case the header map gets changed in the cls 
         self.field_name_map = dict([(val, key) for key, val in self.CSV_HEADERS_TO_FIELD_MAP.items()])
+        self.created_users = []
     
     def do_import(self, user_import_item, dry_run=True, threaded=True):
         """ Does a threaded user import, either as a dry-run or real one.
@@ -290,24 +294,37 @@ class CosinnusUserImportProcessorBase(object):
             During this, user_item_reports should be accrued for the item
             @param item_data: A dict object containing keys corresponding to `KNOWN_CSV_IMPORT_COLUMNS_HEADERS` and the row data for one user
             @return: A django.auth.User object if successful, None if not """
+        check_valid = self._import_check_user_contraints_valid(item_data, user_import_item, dry_run=dry_run)
+        if not check_valid: 
+            return False
         user = self._import_create_auth_user(item_data, user_import_item, dry_run=dry_run)
         if not user:
             return False
+        self.created_users.append(user)
         return True
-        
+    
+    def _import_check_user_contraints_valid(self, item_data, user_import_item, dry_run=True):
+        """ Checks constraints whether a valid user could be created from the import data (unique email). 
+            Will also check against any already created users! """
+        email = item_data.get(self.field_name_map['email']).lower()
+        email_exists_db = get_user_model().objects.filter(email__iexact=email).exists()
+        email_exists_import = any([bool(email == new_user.email) for new_user in self.created_users])
+        if email_exists_db:
+            user_import_item.add_user_report_item(_('The email-address already has an existing user account in the system!'), report_class="error")
+        if email_exists_import:
+            user_import_item.add_user_report_item(_('The email-address is duplicated and already contained in the CSV!'), report_class="error")
+        if email_exists_db or email_exists_import:
+            return False
+        return True
     
     def _import_create_auth_user(self, item_data, user_import_item, dry_run=True):
         """ Create a user object from import.
             @return: None if not successful, else a auth user object """
         # fields are in REQUIRED_FIELDS_FOR_IMPORT so we can assume they exist
-        email = item_data.get(self.field_name_map['email']) 
+        email = item_data.get(self.field_name_map['email']).lower()
         first_name = item_data.get(self.field_name_map['first_name']) 
         last_name = item_data.get(self.field_name_map['last_name'], None) 
         
-        email_exists = get_user_model().objects.filter(email__iexact=email).exists()
-        if email_exists:
-            user_import_item.add_user_report_item(_('This email-address already has an existing user account in the system!'), report_class="error")
-            return None
         user_kwargs = {
             'username': email,
             'email': email,
@@ -317,13 +334,9 @@ class CosinnusUserImportProcessorBase(object):
             user_kwargs['last_name'] = last_name
         user = get_user_model()(**user_kwargs)
         
-        if settings.DEBUG:
-            # TODO: fix for real applications
-            user.password = 'pwd123'
-            
         if not dry_run:
             user.save()
-            user.username = user.id
+            user.username = str(user.id)
             user.save()
             
         del user_kwargs['username']
@@ -331,7 +344,7 @@ class CosinnusUserImportProcessorBase(object):
         return user
     
     def get_user_report_title(self, item_data):
-        return 'Row: #' + str(item_data['ROW_NUM']) + ' <b>' + item_data.get('first_name', '(no name)') + '</b> <i>' + item_data.get('email', '(no email)') + '</i>'
+        return 'Row: #' + str(item_data['ROW_NUM']) + ' <b>' + item_data.get(self.field_name_map['first_name'], '(no name)') + '</b> <i>' + item_data.get(self.field_name_map['email'], '(no email)') + '</i>'
         
         
 

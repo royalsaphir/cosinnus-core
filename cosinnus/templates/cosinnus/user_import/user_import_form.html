@@ -13,8 +13,6 @@
 {% block content %}
 
    <div class="content-box">
-        <i>debug:||| FormView: {{ form_view }}</i>
-	    
         {% trans "Delete uploaded data and upload a new CSV file" as reset_button_label %}
 	
         {% if form_view == "import-ready" or form_view == "invalid" or form_view == "failed" %}
@@ -76,6 +74,9 @@
 				</script>
 	        
 	        {% elif form_view == "import-ready" %}
+                <p class="textfield import-warning">
+                    {% trans "No data has been imported yet." %}<br/>
+                </p>
 	            <h2>{% trans "The uploaded data is valid - please review before importing!" %}</h2>
                 <input type="hidden" name="action" value="import" />
                 {% trans "Import the shown data now" as submit_button_label %}
@@ -93,9 +94,11 @@
                 </p>
                 
             {% elif form_view == "invalid" %}
-                <h2>{% trans "The uploaded data is invalid" %}</h2>
-                <p class="textfield transparent">
+                <p class="textfield import-warning">
                     {% trans "No data has been imported yet." %}<br/>
+                </p>
+                <h2>{% trans "The uploaded data is invalid!" %}</h2>
+                <p class="textfield transparent">
                     {% trans "Please review the errors encountered, and correct them in the CSV. If you have questions, contact our support for help." %}
                 </p>
                 <p class="textfield transparent">    
@@ -114,10 +117,13 @@
                 
 	        
 	        {% elif form_view == "finished" %}
+                <p class="textfield import-success">
+                    {% trans "The uploaded data has been successfully imported!" %}
+                </p>
+                <h2>{% trans "Import successful!" %}</h2>
                 <input type="hidden" name="action" value="archive" />
                 {% trans "Archive Import Report" as submit_button_label %}
                 
-                <h2>{% trans "The uploaded data has been successfully imported!" %}</h2>
                 <p class="textfield transparent">
                     {% trans "Below you will find a report of everything that was imported." %}
                 </p>
