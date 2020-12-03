@@ -16,6 +16,7 @@ from cosinnus.conf import settings
 from cosinnus.utils.functions import resolve_class
 import logging
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 
 logger = logging.getLogger('cosinnus')
 
@@ -31,13 +32,20 @@ class CosinnusUserImportReportItems(object):
     
     text = None
     report_class = "info"
+    is_sub_report_item = False
     
-    def __init__(self, text, report_class="info"):
+    def __init__(self, text, report_class="info", is_sub_report_item=False):
         self.text = text
         self.report_class = report_class
+        self.is_sub_report_item = is_sub_report_item
         
     def to_string(self):
-        return f'<div class="report-item {self.report_class}">{self.text}</div>'
+        context = {
+            'text': self.text,
+            'report_class': self.report_class,
+            'is_sub_report_item': self.is_sub_report_item,
+        }
+        return render_to_string('cosinnus/user_import/report_item.html', context=context)
 
 
 @python_2_unicode_compatible
@@ -110,14 +118,20 @@ class CosinnusUserImport(models.Model):
             Will add symbol markers of any of the contained items' error classes
             @param report_items: None or a list """
         item_classes = list(set([item.report_class for item in self.user_report_items]))
-        report_item_str = "".join([item.to_string() for item in self.user_report_items])
-        self.import_report_html += f'<div class="user-report {report_class}"><h1>{header_text}</h1><h3>TODO: Make accordion and add symbols for classes:{item_classes}</hh3>{report_item_str}</div>'
+        report_item_html = "".join([item.to_string() for item in self.user_report_items])
+        context = {
+            'report_class': report_class,
+            'header_text': header_text,
+            'symbol_classes': item_classes,
+            'report_item_html': report_item_html
+        }
+        self.import_report_html += render_to_string('cosinnus/user_import/report_container_item.html', context=context)
         self.clear_user_report_items()
     
     def add_user_report_item(self, text, report_class="info"):
         """ Makes a report item.
             @param report_class: a str class. can be "error", "warning", "info" (default) or custom """
-        self.user_report_items.append(CosinnusUserImportReportItems(text, report_class))
+        self.user_report_items.append(CosinnusUserImportReportItems(text, report_class, is_sub_report_item=True))
         
     def clear_user_report_items(self):
         self.user_report_items = []
@@ -194,6 +208,10 @@ class CosinnusUserImportProcessorBase(object):
     def _start_import(self, user_import_item, dry_run=True):
         """ Baseline implementation for a very simple user import  """
         import_failed_overall = False
+        
+        total_items = len(user_import_item.import_data)
+        imported_items = 0
+        failed_items = 0
         try:
             for item_data in user_import_item.import_data:
                 # clear user item reports
@@ -203,7 +221,7 @@ class CosinnusUserImportProcessorBase(object):
                 if missing_fields:
                     import_successful = False
                     user_import_item.add_user_report_item(
-                            _('CSV row %(row_num)d was missing required data from columns: %(fields)s') % {'fields': ", ".join(missing_fields), 'row_num': item_data['ROW_NUM']},
+                            _('CSV row did not contain data for required columns: "%(fields)s"') % {'fields': '", "'.join(missing_fields), 'row_num': item_data['ROW_NUM']},
                             report_class="error"
                         )
                 else:
@@ -211,6 +229,10 @@ class CosinnusUserImportProcessorBase(object):
                     
                 report_class = "info" if import_successful else "error"
                 user_import_item.generate_and_append_user_report(self.get_user_report_title(item_data), report_class)
+                if import_successful:
+                    imported_items += 1
+                else:
+                    failed_items += 1
                 
                 # instantly fail a real import when a single user could not be imported. this should have been
                 # caught by the dry-run validation (which wouldve disabled the real import), or hints at a serious
@@ -225,6 +247,14 @@ class CosinnusUserImportProcessorBase(object):
                             ).to_string() + user_import_item.import_report_html
                         break
                     
+            # after loop: prepend summary message
+            summary_message = \
+                str(_("Total Items")) + f': {total_items}, ' +\
+                str(_("Items for Import")) + f': {imported_items}, ' +\
+                str(_("Ignored/Failed Items")) + f': {failed_items}, '
+            user_import_item.import_report_html = CosinnusUserImportReportItems(
+                summary_message, "info"
+                ).to_string() + user_import_item.import_report_html 
                 
         except Exception as e:
             # if this outside exception happens, the import will be declared as "no data has been imported" and the errors will be shown
@@ -297,11 +327,11 @@ class CosinnusUserImportProcessorBase(object):
             user.save()
             
         del user_kwargs['username']
-        user_import_item.add_user_report_item(str(_('New user account: ') + str(user_kwargs)), report_class="error")
+        user_import_item.add_user_report_item(str(_('New user account: ') + str(user_kwargs)), report_class="info")
         return user
     
     def get_user_report_title(self, item_data):
-        return item_data.get('first_name', '<no-name>') + ' ' + item_data.get('email', '<no-email>') + ' csv-row: #' + str(item_data['ROW_NUM'])
+        return 'Row: #' + str(item_data['ROW_NUM']) + ' <b>' + item_data.get('first_name', '(no name)') + '</b> <i>' + item_data.get('email', '(no email)') + '</i>'
         
         
 
